@@ -4,7 +4,7 @@
 
 void Func()
 {
-    std::cout << "Hello Word" << std::endl;
+    std::cout << "Hello World" << std::endl;
 }
 
 void Run()

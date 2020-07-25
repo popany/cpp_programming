@@ -10,16 +10,14 @@ LIBS=-lpthread
 _DEPS=
 DEPS=$(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o
+_OBJ=main.o
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
-
 
 $(ODIR)/%.o: %.cpp $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 a: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-
 
 .PHONY: clean
 
