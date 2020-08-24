@@ -11,7 +11,7 @@ inline std::string GetErrorMsg(std::string info, int errorCode)
     return info + ", error code(" + std::to_string(errorCode) + "), " + strerror(errorCode);
 }
 
-static void SetNonBlocking(int fd)
+void SetNonBlocking(int fd)
 {
     int flags  = fcntl(fd, F_GETFL, 0 );
     flags |= O_NONBLOCK;
