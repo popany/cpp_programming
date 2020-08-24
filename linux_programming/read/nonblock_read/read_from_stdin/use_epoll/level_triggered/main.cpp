@@ -69,15 +69,6 @@ public:
     
 };
 
-
-void CloseFile(int fd)
-{
-    if (close(fd) == -1) {
-        int code = errno;
-        throw std::runtime_error(GetErrorMsg("close failed", code));
-    }
-}
-
 void Run()
 {
     Epoll<MAX_EVENTS> ep;
