@@ -18,6 +18,7 @@ public:
 void Run()
 {
     std::shared_ptr<A> a = std::make_shared<A>();
+    std::cout << "sizeof(a): " << sizeof(a) << std::endl;
 }
 
 int main()
