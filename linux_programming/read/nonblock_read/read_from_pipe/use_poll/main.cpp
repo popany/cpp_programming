@@ -77,7 +77,7 @@ void Run()
         int timeoutMs = 1000;
         int rv = poll(&pollFds[0], 2, timeoutMs);
         if (rv > 0) {
-			if (pollFds[0].revents) {
+            if (pollFds[0].revents) {
                 GetInput(fd1);
             }
             if (pollFds[1].revents) {
