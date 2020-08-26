@@ -79,14 +79,12 @@ void Run()
         int n = poll(pollFds, 2, timeoutMs);
         if (n > 0) {
             if (pollFds[0].revents) {
-                std::cout << "111" << std::endl;
                 r += Read(pollFds[0].fd);
                 if (r.size() > 0) {
                     pollFds[1].events |= POLLOUT;
                 }
             }
             if (pollFds[1].revents & POLLIN) {
-                std::cout << "222" << std::endl;
                 std::string s = Read(pollFds[1].fd);
                 if (s.size() == 0) {
                     std::cout << "peer closed" << std::endl;
@@ -95,11 +93,12 @@ void Run()
                 std::cout << ">" << s << std::endl;
             }
             if (pollFds[1].revents & POLLOUT) {
-                std::cout << "333" << std::endl;
+                std::string tmp = r;
                 r = Write(pollFds[1].fd, r);
                 if (r.size() == 0) {
                     pollFds[1].events &= ~POLLOUT;
                 }
+                std::cout << "<" << tmp.substr(0, tmp.size() - r.size()) << std::endl;
             }
         } else if (n < 0) {
             int code = errno;
