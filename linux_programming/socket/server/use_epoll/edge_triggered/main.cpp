@@ -58,11 +58,12 @@ public:
         }
     }
 
-    void Delete(int fd)
+    void DeleteFd(int fd)
     {
-        if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, NULL) == -1) {
+        std::cout << "Epoll::DeleteFd(), fd=" << fd << std::endl;
+        if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fd, NULL) == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Epoll.Delete() failed", code));
+            throw std::runtime_error(GetErrorMsg("Epoll.DeleteFd() failed", code));
         }
     }
 
@@ -103,16 +104,26 @@ class ConnHandler
     std::string ip;
     uint16_t port;
     bool isEof;
+    std::function<void(int)> closeConn;
     
 public:
-    std::function<void()> Close;
 
-    ConnHandler(int fd, std::string ip, uint16_t port, std::function<void()> CloseFunc): fd(fd), ip(ip), port(port), isEof(false), Close(CloseFunc)
+    ConnHandler(int fd, std::string ip, uint16_t port, std::function<void(int)> closeConn):
+        fd(fd),
+        ip(ip),
+        port(port),
+        isEof(false),
+        closeConn(closeConn)
     {}
+
+    void CloseConn()
+    {
+        closeConn(fd);
+    }
 
     std::string GetPeerInfo()
     {
-        return std::string("ip=\"") + ip + "\", port=" + std::to_string(port);
+        return ip + ":" + std::to_string(port) + ", fd=" + std::to_string(fd);
     }
 
     bool IsEof()
@@ -144,9 +155,28 @@ public:
         return s;
     }
 
-    ssize_t Write(const std::string& s)
+    std::string Write(std::string s)
     {
-        return 0;
+        if (s.empty()) {
+            return std::string{};
+        }
+        for (;;) {
+            if (s.empty()) {
+                break;
+            }
+            ssize_t n = write(fd, s.c_str(), s.size());
+            if (n < 0) {
+                int code = errno;
+                if (code == EAGAIN) {
+                    break;
+                }
+                throw std::runtime_error(GetErrorMsg("Write() failed", code));
+            }
+            else {
+                s = s.substr(n, s.size() - n);
+            }
+        }
+        return s;
     }
 };
 
@@ -206,6 +236,7 @@ class Server
 
     void CloseFd(int fd)
     {
+        std::cout << "Server::CloseFd(), fd=" << fd << std::endl;
         if (close(fd) == -1) {
             int code = errno;
             throw std::runtime_error(GetErrorMsg("Server::CloseFd() failed", code));
@@ -230,10 +261,10 @@ class Server
                 fd, 
                 ip,
                 port,
-                [&]{
-                    ep.Delete(fd);
-                    CloseFd(fd);
-                    conns.erase(fd);
+                [&](int fdv){
+                    ep.DeleteFd(fdv);
+                    CloseFd(fdv);
+                    conns.erase(fdv);
                 })
         );
         conns[fd] = nextConnId;
@@ -295,117 +326,162 @@ public:
     }
 };
 
-enum SessionStatus
-{
-    CONNECTED,
-    READING,
-    READ_COMPLETE,
-    WRITING,
-    WRITE_COMPLETE,
-};
-
-enum ConnFlag
-{
-    Readable = 1,
-    Writable = 1 << 1,
-};
-
 class Session
 {
+    uint64_t id;
     std::string input;
     std::string output;
+    std::string peerInfo;
 
-    SessionStatus status;
-    uint32_t connFlag;
+    bool isReadable;
+    bool isWritable;
+    bool isClosed;
 
     ConnHandler connHandler;
 
+    std::function<void()> releaseSession;
+
+    bool PeerClosed()
+    {
+        return connHandler.IsEof();
+    }
+
 public:
-    Session(ConnHandler connHandler): status(CONNECTED), connFlag(0), connHandler(connHandler)
-    {}
+    Session(uint64_t id, ConnHandler connHandler, std::function<void()> releaseSession):
+        id(id),
+        connHandler(connHandler),
+        releaseSession(releaseSession),
+        isReadable(false),
+        isWritable(false),
+        isClosed(false)
+    {
+        peerInfo = connHandler.GetPeerInfo();
+    }
+
+    const std::string& GetPeerInfo()
+    {
+        return peerInfo;
+    }
 
     void SetReadable()
     {
-        connFlag |= Readable;
-    }
-
-    void SetUnreadable()
-    {
-        connFlag &= ~Readable;
+        isReadable = true;
     }
 
     void SetWritable()
     {
-        connFlag |= Writable;
-    }
-
-    void SetUnwritable()
-    {
-        connFlag &= ~Writable;
+        isWritable = true;
     }
 
     void Read()
     {
+        if (!isReadable) {
+            return;
+        }
+
         input += connHandler.Read();
+        size_t pos = input.find('.');
+        if (pos != std::string::npos) {
+            std::string tmp = input.substr(0, pos);
+            input = input.substr(pos + 1, input.size() - pos - 1);
+            output += "[" + std::string(tmp.rbegin(), tmp.rend()) + "]";
+        }
+
+        isReadable = false;
+        Write();
+    }
+
+    void Write()
+    {
+        if (!isWritable) {
+            return;
+        }
+
+        output = connHandler.Write(output);
+
+        isWritable = false;
+        
+        if (PeerClosed() && output.empty()) {
+            Close();
+        }
     }
 
     void Close()
     {
-        connHandler.Close();
+        if (isClosed) {
+            throw std::runtime_error("Session::Close(), session is closed");
+        }
+        connHandler.CloseConn();
+        releaseSession();
+        std::cout << "Session::Close(), " << GetPeerInfo() << std::endl;
+        isClosed = true;
     }
 };
 
 class SessionManager
 {
     std::map<uint64_t, std::shared_ptr<Session>> sessions;
-    
+
+    void ReleaseSession(uint64_t id)
+    {
+        VerifySessionExist(id);
+        sessions.erase(id);
+    }
+   
 public:
     SessionManager()
     {}
 
-    void CloseSession(uint64_t id)
-    {
-        sessions[id]->Close();
-        sessions.erase(id);
-    }
-
-    void CheckSessionExist(uint64_t id)
+    void VerifySessionExist(uint64_t id)
     {
         if (sessions.count(id) == 0) {
-            throw std::runtime_error("SessionManager::CheckSessionExist(), failed to find id");
+            throw std::runtime_error("SessionManager::VerifySessionExist()");
         }
     }
 
+    void VerifySessionNotExist(uint64_t id)
+    {
+        if (sessions.count(id) != 0) {
+            throw std::runtime_error("SessionManager::VerifySessionNotExist()");
+        }
+    }
+
+
     void NewConnection(uint64_t id, ConnHandler connHandler)
     {
-        std::cout << "SessionManager::NewConnection(), " << connHandler.GetPeerInfo() << std::endl;
-        sessions[id] = std::make_shared<Session>(connHandler);
+        VerifySessionNotExist(id);
+        std::shared_ptr<Session> session = std::make_shared<Session>(id, connHandler, std::bind(&SessionManager::ReleaseSession, this, id));
+        sessions[id] = session;
+        std::cout << "SessionManager::NewConnection(), " << session->GetPeerInfo() << ", session count: " << sessions.size() << std::endl;
     }
 
     void CanRead(uint64_t id)
     {
-        std::cout << "SessionManager::CanRead()" << std::endl;
-        CheckSessionExist(id);
+        VerifySessionExist(id);
+        auto session = sessions[id];
+        std::cout << "SessionManager::CanRead(), " << session->GetPeerInfo() << std::endl;
 
-        sessions[id]->SetReadable();
-        
-        sessions[id]->Read();
+        session->SetReadable();
+        session->Read();
     }
 
     void CanWrite(uint64_t id)
     {
-        std::cout << "SessionManager::CanWrite()" << std::endl;
-        CheckSessionExist(id);
+        VerifySessionExist(id);
+        auto session = sessions[id];
+        std::cout << "SessionManager::CanWrite(), " << session->GetPeerInfo() << std::endl;
 
-        sessions[id]->SetWritable();
+        session->SetWritable();
+        session->Write();
     }
 
     void ErrorOccurred(uint64_t id)
     {
-        std::cout << "SessionManager::ErrorOccurred()" << std::endl;
-        CheckSessionExist(id);
+        VerifySessionExist(id);
+        auto session = sessions[id];
+        std::cout << "SessionManager::ErrorOccurred(), " << session->GetPeerInfo() << std::endl;
 
-        CloseSession(id);
+        session->Close();
     }
 };
 
