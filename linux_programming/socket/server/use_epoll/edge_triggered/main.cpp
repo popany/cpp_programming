@@ -4,19 +4,22 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
 #include <errno.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
 #include <map>
 #include <functional>
 #include <memory>
 
 #define MAX_EVENTS 10
+
+static bool timeToExit = false;
 
 inline std::string GetErrorMsg(std::string info, int errorCode)
 {
@@ -240,7 +243,7 @@ class Server
         std::cout << "Server::CloseFd(), fd=" << fd << std::endl;
         if (close(fd) == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Server::CloseFd() failed", code));
+            throw std::runtime_error(GetErrorMsg("Server::CloseFd() failed, fd=" + std::to_string(fd), code));
         }
     }
 
@@ -300,11 +303,22 @@ class Server
         }
     }
 
+    void Release()
+    {
+        while (!conns.empty()) {
+            TimeToExit(conns.begin()->second);
+        }
+
+        ep.DeleteFd(listenFd);
+        CloseFd(listenFd);
+    }
+
 public:
     std::function<void(uint64_t, ConnHandler)> NewConnection;
     std::function<void(uint64_t)> CanRead;
     std::function<void(uint64_t)> CanWrite;
     std::function<void(uint64_t)> ErrorOccurred;
+    std::function<void(uint64_t)> TimeToExit;
 
     Server(uint16_t port): nextConnId(0), port(port)
     {}
@@ -322,6 +336,10 @@ public:
                 ProcessEvents(n);
             } else {
                 std::cout << "epoll wait timeout(" + std::to_string(timeoutMs) + "ms)" << std::endl;
+            }
+            if (timeToExit) {
+                Release();
+                break;
             }
         }
     }
@@ -381,8 +399,7 @@ public:
         }
 
         std::string s = connHandler.Read();
-        std::cout << "Session::Read(), " << GetPeerInfo() << ". \"" << s << "\"" << std::endl;
-        s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
+        std::cout << "Session::Read(), " << GetPeerInfo() << ". read: \"" << s << "\"" << std::endl;
         input += s;
         for (;;) {
             size_t pos = input.find('.');
@@ -491,6 +508,15 @@ public:
 
         session->Close();
     }
+
+    void TimeToExit(uint64_t id)
+    {
+        VerifySessionExist(id);
+        auto session = sessions[id];
+        std::cout << "SessionManager::TimeToExit(), " << session->GetPeerInfo() << std::endl;
+
+        session->Close();
+    }
 };
 
 void RegisterServerCallback(Server& server, SessionManager& sessionMgr)
@@ -499,12 +525,30 @@ void RegisterServerCallback(Server& server, SessionManager& sessionMgr)
     server.CanRead = std::bind(&SessionManager::CanRead, &sessionMgr, std::placeholders::_1);
     server.CanWrite = std::bind(&SessionManager::CanWrite, &sessionMgr, std::placeholders::_1);
     server.ErrorOccurred = std::bind(&SessionManager::ErrorOccurred, &sessionMgr, std::placeholders::_1);
+    server.TimeToExit = std::bind(&SessionManager::TimeToExit, &sessionMgr, std::placeholders::_1);
+}
+
+void SigHandler(int sigNum)
+{
+    if (sigNum == SIGINT) {
+        timeToExit = true;
+    }
+}
+
+void SetExitCondition()
+{
+    if (signal(SIGINT, SigHandler) == SIG_ERR) {
+        int code = errno;
+        throw std::runtime_error(GetErrorMsg("SetExitCondition(), signal", code));
+    }
 }
 
 int main()
 {
     const uint16_t port = 5666;
     try {
+        SetExitCondition();
+
         Server server(port);
         SessionManager sessionMgr;
         RegisterServerCallback(server, sessionMgr);
