@@ -379,7 +379,9 @@ public:
             return;
         }
 
-        input += connHandler.Read();
+        std::string s = connHandler.Read();
+        std::cout << "Session::Read(), " << GetPeerInfo() << ". \"" << s << "\"" << std::endl;
+        input += s;
         size_t pos = input.find('.');
         if (pos != std::string::npos) {
             std::string tmp = input.substr(0, pos);
