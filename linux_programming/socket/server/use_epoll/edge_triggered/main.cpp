@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <stdexcept>
 #include <stdint.h>
 #include <string.h>
@@ -381,6 +382,7 @@ public:
 
         std::string s = connHandler.Read();
         std::cout << "Session::Read(), " << GetPeerInfo() << ". \"" << s << "\"" << std::endl;
+        s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
         input += s;
         size_t pos = input.find('.');
         if (pos != std::string::npos) {
