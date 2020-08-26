@@ -384,11 +384,15 @@ public:
         std::cout << "Session::Read(), " << GetPeerInfo() << ". \"" << s << "\"" << std::endl;
         s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
         input += s;
-        size_t pos = input.find('.');
-        if (pos != std::string::npos) {
-            std::string tmp = input.substr(0, pos);
-            input = input.substr(pos + 1, input.size() - pos - 1);
-            output += "[" + std::string(tmp.rbegin(), tmp.rend()) + "]";
+        for (;;) {
+            size_t pos = input.find('.');
+            if (pos != std::string::npos) {
+                std::string tmp = input.substr(0, pos);
+                input = input.substr(pos + 1, input.size() - pos - 1);
+                output += "[" + std::string(tmp.rbegin(), tmp.rend()) + "]";
+            } else {
+                break;
+            }
         }
 
         isReadable = false;
