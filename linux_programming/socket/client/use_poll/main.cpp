@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <stdexcept>
 #include <stdint.h>
@@ -80,6 +81,7 @@ void Run()
         if (n > 0) {
             if (pollFds[0].revents) {
                 r += Read(pollFds[0].fd);
+                r.erase(std::remove(r.begin(), r.end(), '\n'), r.end());
                 if (r.size() > 0) {
                     pollFds[1].events |= POLLOUT;
                 }
