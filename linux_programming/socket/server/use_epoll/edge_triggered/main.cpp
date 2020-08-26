@@ -1,6 +1,7 @@
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -99,13 +100,20 @@ void SetNonBlocking(int fd)
 class ConnHandler
 {
     int fd;
+    std::string ip;
+    uint16_t port;
     bool isEof;
     
 public:
     std::function<void()> Close;
 
-    ConnHandler(int fd, std::function<void()> CloseFunc): fd(fd), isEof(false), Close(CloseFunc)
+    ConnHandler(int fd, std::string ip, uint16_t port, std::function<void()> CloseFunc): fd(fd), ip(ip), port(port), isEof(false), Close(CloseFunc)
     {}
+
+    std::string GetPeerInfo()
+    {
+        return std::string("ip=\"") + ip + "\", port=" + std::to_string(port);
+    }
 
     bool IsEof()
     {
@@ -130,6 +138,7 @@ public:
                 s += &buf[0];
             } else {
                 isEof = true;
+                break;
             }
         }
         return s;
@@ -175,7 +184,7 @@ class Server
         }
     }
 
-    int Accept()
+    int Accept(std::string& ip, uint16_t& port)
     {
         sockaddr_in addr;
         socklen_t len = sizeof(addr);
@@ -184,6 +193,14 @@ class Server
             int code = errno;
             throw std::runtime_error(GetErrorMsg("Server::Accept() failed", code));
         }
+
+        std::vector<char> buf(INET_ADDRSTRLEN + 1, 0);
+        if (inet_ntop(AF_INET, &addr.sin_addr, &buf[0], INET_ADDRSTRLEN) == NULL) {
+            int code = errno;
+            throw std::runtime_error(GetErrorMsg("Server::Accept() failed, inet_ntop", code));
+        }
+        ip = &buf[0];
+        port = ntohs(addr.sin_port);
         return fd;
     }
 
@@ -197,7 +214,9 @@ class Server
 
     void ProcessNewConnection()
     {
-        int fd = Accept();
+        std::string ip{};
+        uint16_t port;
+        int fd = Accept(ip, port);
         if (conns.count(fd) != 0) {
             throw std::runtime_error("Server::ProcessNewConnection(), fd exist");
         }
@@ -207,11 +226,15 @@ class Server
         ep.Add(fd, EPOLLIN | EPOLLOUT | EPOLLET);
 
         NewConnection(nextConnId,
-            ConnHandler(fd, [&]{
-                ep.Delete(fd);
-                CloseFd(fd);
-                conns.erase(fd);
-            })
+            ConnHandler(
+                fd, 
+                ip,
+                port,
+                [&]{
+                    ep.Delete(fd);
+                    CloseFd(fd);
+                    conns.erase(fd);
+                })
         );
         conns[fd] = nextConnId;
     }
@@ -346,18 +369,23 @@ public:
         sessions.erase(id);
     }
 
+    void CheckSessionExist(uint64_t id)
+    {
+        if (sessions.count(id) == 0) {
+            throw std::runtime_error("SessionManager::CheckSessionExist(), failed to find id");
+        }
+    }
+
     void NewConnection(uint64_t id, ConnHandler connHandler)
     {
-        std::cout << "SessionManager::NewConnection()" << std::endl;
+        std::cout << "SessionManager::NewConnection(), " << connHandler.GetPeerInfo() << std::endl;
         sessions[id] = std::make_shared<Session>(connHandler);
     }
 
     void CanRead(uint64_t id)
     {
         std::cout << "SessionManager::CanRead()" << std::endl;
-        if (sessions.count(id) == 0) {
-            throw std::runtime_error("SessionManager::CanRead(), failed to find id");
-        }
+        CheckSessionExist(id);
 
         sessions[id]->SetReadable();
         
@@ -367,9 +395,7 @@ public:
     void CanWrite(uint64_t id)
     {
         std::cout << "SessionManager::CanWrite()" << std::endl;
-        if (sessions.count(id) == 0) {
-            throw std::runtime_error("SessionManager::CanRead(), failed to find id");
-        }
+        CheckSessionExist(id);
 
         sessions[id]->SetWritable();
     }
@@ -377,9 +403,7 @@ public:
     void ErrorOccurred(uint64_t id)
     {
         std::cout << "SessionManager::ErrorOccurred()" << std::endl;
-        if (sessions.count(id) == 0) {
-            throw std::runtime_error("SessionManager::CanRead(), failed to find id");
-        }
+        CheckSessionExist(id);
 
         CloseSession(id);
     }
