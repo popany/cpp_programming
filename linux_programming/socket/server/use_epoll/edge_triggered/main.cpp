@@ -83,15 +83,15 @@ public:
         }
         return n;
     }
-	
-	int GetFd(int i) const
-	{
-		return events[i].data.fd;
-	}
+
+    int GetFd(int i) const
+    {
+        return events[i].data.fd;
+    }
 
     uint32_t GetEvent(int i) const
     {
-		return events[i].events;
+        return events[i].events;
     }
 };
 
@@ -328,7 +328,7 @@ public:
         Listen();
         ep.Init();
         ep.Add(listenFd, EPOLLIN);
-	
+
         for (;;) {   
             const int timeoutMs = 3000;
             int n = ep.Wait(timeoutMs);
