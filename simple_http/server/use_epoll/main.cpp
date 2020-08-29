@@ -10,12 +10,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
 #include <map>
 #include <functional>
 #include <memory>
+#include <mutex>
 
 #define MAX_EVENTS 10
 
@@ -25,6 +27,208 @@ inline std::string GetErrorMsg(std::string info, int errorCode)
 {
     return info + ", error code(" + std::to_string(errorCode) + "), " + strerror(errorCode);
 }
+
+static inline void Ltrim(std::string &s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+}
+
+static inline void Rtrim(std::string &s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
+}
+
+static inline void Trim(std::string &s)
+{
+    Ltrim(s);
+    Rtrim(s);
+}
+
+class Config
+{
+    enum {
+        DEFAULT_PORT = 5666,
+    };
+
+    void ParseLine(std::string s)
+    {
+        Trim(s);
+        size_t pos = s.find('=');
+        if (pos == std::string::npos) {
+            return;
+        }
+
+        std::string name = s.substr(0, pos);
+        Trim(name);
+        std::string value = s.substr(pos + 1);
+        Trim(value);
+        
+        if (name == "port") {
+            port = std::stoi(value);
+        } else if (name == "log_level") {
+            logLevel = value;
+        }
+    }
+
+    Config():
+        port(DEFAULT_PORT)
+    {
+        std::ifstream fs("./config");
+        if (fs.fail()) {
+            std::cout << "failed to open config file" << std::endl;
+            exit(1);
+        }
+        
+        while (!fs.eof()) {
+            std::string s;
+            std::getline(fs, s);
+            ParseLine(s);
+        }
+    }
+
+public:
+
+    std::string logLevel;
+    uint16_t port;
+
+    Config(const Config&) = delete;
+    void operator=(const Config&) = delete;
+
+    static Config& GetInstance()
+    {
+        static Config config;
+        return config;
+    }
+};
+
+class Logger
+{
+    enum {
+        LEVEL_ERROR = 0,
+        LEVEL_WARN,
+        LEVEL_INFO,
+        LEVEL_DEBUG,
+        LEVEL_ALWAYS
+    };
+
+    int logLevel;
+    std::ofstream fs;
+    std::mutex m;
+
+    Logger():
+        logLevel(LEVEL_ALWAYS)
+    {
+        fs.open("./log.txt");
+        if (!fs.is_open()) {
+            std::cout << "failed to open logfile" << std::endl;
+            exit(1);
+        }
+    }
+
+    template <typename T>
+    void Log(T t) 
+    {
+        fs << t << "\n";
+        std::cout << t << "\n";
+    }
+
+    template<typename T, typename... Args>
+    void Log(T t, Args... args)
+    {
+        fs << t;
+        std::cout << t;
+        Log(args...) ;
+    }
+
+public:
+    Logger(const Logger&) = delete;
+    void operator=(const Logger&) = delete;
+
+    static Logger& GetInstance()
+    {
+        static Logger instance;
+        return instance;
+    }
+
+    ~Logger()
+    {
+        fs.close();
+    }
+
+    void SetLogLevel(std::string s)
+    {
+        if (s == "error") {
+            logLevel = LEVEL_ERROR;
+            LogAlways("SetLogLevel: error");
+        } else if (s == "warn") {
+            logLevel = LEVEL_WARN;
+            LogAlways("SetLogLevel: warn");
+        } else if (s == "info") {
+            logLevel = LEVEL_INFO;
+            LogAlways("SetLogLevel: info");
+        } else if (s == "debug") {
+            logLevel = LEVEL_DEBUG;
+            LogAlways("SetLogLevel: debug");
+        }
+    }
+
+    template<typename... Args>
+    void LogAlways(Args... args)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        Log(args...);
+    }
+
+    template<typename... Args>
+    void LogInfo(Args... args)
+    {
+        if (logLevel < LEVEL_INFO) {
+            return;
+        }
+
+        std::lock_guard<std::mutex> lk(m);
+        Log("[Info]", args...);
+    }
+
+    template<typename... Args>
+    void LogWarn(Args... args)
+    {
+        if (logLevel < LEVEL_WARN) {
+            return;
+        }
+
+        std::lock_guard<std::mutex> lk(m);
+        Log("[Warn]", args...);
+    }
+
+    template<typename... Args>
+    void LogError(Args... args)
+    {
+        if (logLevel < LEVEL_ERROR) {
+            return;
+        }
+
+        std::lock_guard<std::mutex> lk(m);
+        Log("[Error]", args...);
+    }
+
+    template<typename... Args>
+    void LogDebug(Args... args)
+    {
+        if (logLevel < LEVEL_DEBUG) {
+            return;
+        }
+
+        std::lock_guard<std::mutex> lk(m);
+        Log("[Debug]", args...);
+    }
+};
+
+#define LogInfo(...) Logger::GetInstance().LogInfo(std::string("[")+__PRETTY_FUNCTION__+"] ",__VA_ARGS__)
+#define LogDebug(...) Logger::GetInstance().LogDebug(std::string("[")+__PRETTY_FUNCTION__+"] ",__VA_ARGS__)
+#define LogWarn(...) Logger::GetInstance().LogWarn(std::string("[")+__PRETTY_FUNCTION__+"] ",__VA_ARGS__)
+#define LogError(...) Logger::GetInstance().LogError(std::string("[")+__PRETTY_FUNCTION__+"] ",__VA_ARGS__)
+#define LogAlways(...) Logger::GetInstance().LogAlways(std::string("[")+__PRETTY_FUNCTION__+"] ",__VA_ARGS__)
 
 template <int events_count>
 class Epoll
@@ -64,7 +268,7 @@ public:
 
     void Delete(int fd)
     {
-        std::cout << "Epoll::Delete(), fd=" << fd << std::endl;
+        LogDebug("delete fd: ", fd);
         if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fd, NULL) == -1) {
             int code = errno;
             throw std::runtime_error(GetErrorMsg("Epoll.Delete() failed", code));
@@ -240,7 +444,7 @@ class Server
 
     void CloseFd(int fd)
     {
-        std::cout << "Server::CloseFd(), fd=" << fd << std::endl;
+        LogDebug("close fd: ", fd);
         if (close(fd) == -1) {
             int code = errno;
             throw std::runtime_error(GetErrorMsg("Server::CloseFd() failed, fd=" + std::to_string(fd), code));
@@ -325,6 +529,7 @@ public:
 
     void Start()
     {
+        LogInfo("server start, port: ", port);
         Listen();
         ep.Init();
         ep.Add(listenFd, EPOLLIN);
@@ -335,7 +540,7 @@ public:
             if (n > 0) {
                 ProcessEvents(n);
             } else {
-                std::cout << "epoll wait timeout(" + std::to_string(timeoutMs) + "ms)" << std::endl;
+                LogDebug("epoll wait timeout(", timeoutMs, "ms)");
             }
             if (timeToExit) {
                 Release();
@@ -344,22 +549,6 @@ public:
         }
     }
 };
-
-static inline void Ltrim(std::string &s)
-{
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
-}
-
-static inline void Rtrim(std::string &s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
-}
-
-static inline void Trim(std::string &s)
-{
-    Ltrim(s);
-    Rtrim(s);
-}
 
 class HttpRequest
 {
@@ -398,7 +587,7 @@ class HttpRequest
     {
         size_t pos = s.find(HEADER_SEP);
         if (pos == std::string::npos) {
-            throw std::runtime_error(__FUNCTION__);
+            throw std::runtime_error(__PRETTY_FUNCTION__);
         }
         std::string v = s.substr(pos + HEADER_SEP_LEN);
         Trim(v);
@@ -481,13 +670,13 @@ public:
         buf.clear();
     }
 
-    void Print()
+    void PrintRequest()
     {
-        std::cout << "first line: " << firstLine << std::endl;
+        LogDebug("first line: ", firstLine);
         for (const auto x : headers) {
-            std::cout << x.first << ": " << x.second << std::endl;
+            LogDebug(x.first, ": ", x.second);
         }
-        std::cout << "message body: " << messageBody << std::endl; 
+        LogDebug("message body: ", messageBody);
     }
 
     bool AllReceived()
@@ -558,7 +747,7 @@ public:
 
     void Process()
     {
-        request.Print();
+        request.PrintRequest();
         std::string receivedMsg = request.GetMessageBody();
         std::string responseMsg = "hello\r\n";
         
@@ -590,7 +779,7 @@ public:
         }
 
         std::string s = connHandler.Read();
-        std::cout << "Session::Read(), " << GetPeerInfo() << ". read: \"" << s << "\"" << std::endl;
+        LogDebug(GetPeerInfo(), ". read: \"", s, "\"");
 
         request.Append(s);
 
@@ -624,7 +813,7 @@ public:
         }
         connHandler.CloseConn();
         releaseSession();
-        std::cout << "Session::Close(), " << GetPeerInfo() << std::endl;
+        LogDebug(GetPeerInfo());
         isClosed = true;
     }
 };
@@ -663,14 +852,14 @@ public:
         VerifySessionNotExist(id);
         std::shared_ptr<Session> session = std::make_shared<Session>(id, connHandler, std::bind(&SessionManager::ReleaseSession, this, id));
         sessions[id] = session;
-        std::cout << "SessionManager::NewConnection(), " << session->GetPeerInfo() << ", session count: " << sessions.size() << std::endl;
+        LogDebug(session->GetPeerInfo(), ", session count: ", sessions.size());
     }
 
     void CanRead(uint64_t id)
     {
         VerifySessionExist(id);
         auto session = sessions[id];
-        std::cout << "SessionManager::CanRead(), " << session->GetPeerInfo() << std::endl;
+        LogDebug(session->GetPeerInfo());
 
         session->SetReadable();
         session->Read();
@@ -680,7 +869,7 @@ public:
     {
         VerifySessionExist(id);
         auto session = sessions[id];
-        std::cout << "SessionManager::CanWrite(), " << session->GetPeerInfo() << std::endl;
+        LogDebug(session->GetPeerInfo());
 
         session->SetWritable();
         session->Write();
@@ -690,7 +879,7 @@ public:
     {
         VerifySessionExist(id);
         auto session = sessions[id];
-        std::cout << "SessionManager::ErrorOccurred(), " << session->GetPeerInfo() << std::endl;
+        LogDebug(session->GetPeerInfo());
 
         session->Close();
     }
@@ -699,7 +888,7 @@ public:
     {
         VerifySessionExist(id);
         auto session = sessions[id];
-        std::cout << "SessionManager::TimeToExit(), " << session->GetPeerInfo() << std::endl;
+        LogDebug(session->GetPeerInfo());
 
         session->Close();
     }
@@ -731,18 +920,18 @@ void SetExitCondition()
 
 int main()
 {
-    const uint16_t port = 5666;
+    Logger::GetInstance().SetLogLevel(Config::GetInstance().logLevel);
 
     try {
         SetExitCondition();
 
-        Server server(port);
+        Server server(Config::GetInstance().port);
         SessionManager sessionMgr;
         RegisterServerCallback(server, sessionMgr);
 
         server.Start();
     } catch (const std::exception& e) {
-        std::cout << "exception: " << e.what() << std::endl;
+        LogError("exception: ", e.what());
     }
 
     return 0;
