@@ -48,6 +48,7 @@ class Config
 {
     enum {
         DEFAULT_PORT = 5666,
+        EP_EVENT_COUNT = 10,
     };
 
     void ParseLine(std::string s)
@@ -71,7 +72,8 @@ class Config
     }
 
     Config():
-        port(DEFAULT_PORT)
+        port(DEFAULT_PORT),
+        epEventCount(EP_EVENT_COUNT)
     {
         std::ifstream fs("./config");
         if (fs.fail()) {
@@ -90,6 +92,7 @@ public:
 
     std::string logLevel;
     uint16_t port;
+    size_t epEventCount;
 
     Config(const Config&) = delete;
     void operator=(const Config&) = delete;
@@ -230,7 +233,6 @@ public:
 #define LogError(...) Logger::GetInstance().LogError(std::string("[")+__PRETTY_FUNCTION__+"] ",__VA_ARGS__)
 #define LogAlways(...) Logger::GetInstance().LogAlways(std::string("[")+__PRETTY_FUNCTION__+"] ",__VA_ARGS__)
 
-template <int events_count>
 class Epoll
 {
     int epollFd;
@@ -241,13 +243,13 @@ class Epoll
         epollFd = epoll_create1(0);
         if (epollFd == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Epoll::CreateEpollFd() failed, epoll_create1", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", epoll_create1 failed", code));
         }
     }
 
 public:
 
-    Epoll(): events(events_count)
+    Epoll(size_t eventCount): events(eventCount)
     {}
 
     void Init()
@@ -262,7 +264,7 @@ public:
         event.events = eventMask;
         if (epoll_ctl(epollFd, EPOLL_CTL_ADD, fd, &event) == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Epoll.Add() failed", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", epoll_ctl failed", code));
         }
     }
 
@@ -271,19 +273,19 @@ public:
         LogDebug("delete fd: ", fd);
         if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fd, NULL) == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Epoll.Delete() failed", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", epoll_ctl failed", code));
         }
     }
 
     int Wait(int timeoutMs)
     {
-        int n = epoll_wait(epollFd, &events[0], events_count, timeoutMs);
+        int n = epoll_wait(epollFd, events.data(), events.size(), timeoutMs);
         if (n == -1) {
             int code = errno;
             if (code == EINTR) {
                 return 0;
             }
-            throw std::runtime_error(GetErrorMsg("Epoll.Wait() failed", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", epoll_wait failed", code));
         }
         return n;
     }
@@ -306,32 +308,23 @@ void SetNonBlocking(int fd)
     flags = fcntl(fd, F_SETFL, flags);
 }
 
-class ConnHandler
+class SocketHandler
 {
     int fd;
-    std::string ip;
-    uint16_t port;
     bool isEof;
-    std::function<void(int)> closeConn;
+    std::function<void(int)> close;
     
 public:
 
-    ConnHandler(int fd, std::string ip, uint16_t port, std::function<void(int)> closeConn):
+    SocketHandler(int fd, std::function<void(int)> close):
         fd(fd),
-        ip(ip),
-        port(port),
         isEof(false),
-        closeConn(closeConn)
+        close(close)
     {}
 
-    void CloseConn()
+    void Close()
     {
-        closeConn(fd);
-    }
-
-    std::string GetPeerInfo()
-    {
-        return ip + ":" + std::to_string(port) + ", fd=" + std::to_string(fd);
+        close(fd);
     }
 
     bool IsEof()
@@ -352,7 +345,7 @@ public:
                 if (code == EAGAIN) {
                     break;
                 }
-                throw std::runtime_error(GetErrorMsg("ConnHandler::Read(), read", code));
+                throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", read", code));
             } else if (n > 0) {
                 s += &buf[0];
             } else {
@@ -378,7 +371,7 @@ public:
                 if (code == EAGAIN) {
                     break;
                 }
-                throw std::runtime_error(GetErrorMsg("Write() failed", code));
+                throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", write failed", code));
             }
             else {
                 s.erase(0, n);
@@ -388,21 +381,76 @@ public:
     }
 };
 
+struct ClientInfo
+{
+    std::string ip;
+    uint16_t port;
+};
+
+class SocketMap
+{
+    std::map<int, uint64_t> sockets;
+    std::mutex m;
+
+public:
+    void Add(int fd, uint64_t connectionId)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        sockets[fd] = connectionId;
+    }
+
+    void Delete(int fd)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        if (sockets.count(fd) == 0) {
+            throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ", fd(" + std::to_string(fd) + ") not exist");
+        }
+        sockets.erase(fd);
+    }
+
+    uint64_t operator[](int fd)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        return sockets[fd];
+    }
+
+    size_t Count(int fd)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        return sockets.count(fd);
+    }
+
+    std::vector<uint64_t> GetValues()
+    {
+        std::lock_guard<std::mutex> lk(m);
+        std::vector<uint64_t> values;
+        for (auto e : sockets) {
+            values.push_back(e.second);
+        }
+        return values;
+    }
+};
+
 class Server
 {
     const uint16_t port;
     int listenFd;
     uint64_t nextConnId;
-    std::map<int, uint64_t> conns;
 
-    Epoll<MAX_EVENTS> ep;
+    Epoll ep;
+    SocketMap socketMap;
+
+    bool CheckSocketExist(int fd)
+    {
+        return socketMap.Count(fd);
+    }
 
     void Listen()
     {
         listenFd = socket(AF_INET, SOCK_STREAM, 0);
         if (listenFd == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Server::Listen() failed, socket", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", socket failed", code));
         }
         sockaddr_in addr;
         explicit_bzero(&addr, sizeof(addr));
@@ -412,13 +460,13 @@ class Server
 
         if (bind(listenFd, (sockaddr*)&addr, sizeof(addr)) == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Server::Listen() failed, bind", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", bind failed", code));
         }
 
         const int LISTEN_BACKLOG = 50;
         if (listen(listenFd, LISTEN_BACKLOG) == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Server::Listen() failed, listen", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", listen failed", code));
         }
     }
 
@@ -429,13 +477,13 @@ class Server
         int fd = accept(listenFd, (sockaddr*)&addr, &len);
         if (fd == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Server::Accept() failed", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", accept failed", code));
         }
 
         std::vector<char> buf(INET_ADDRSTRLEN + 1, 0);
         if (inet_ntop(AF_INET, &addr.sin_addr, &buf[0], INET_ADDRSTRLEN) == NULL) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Server::Accept() failed, inet_ntop", code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", inet_ntop failed", code));
         }
         ip = &buf[0];
         port = ntohs(addr.sin_port);
@@ -447,7 +495,7 @@ class Server
         LogDebug("close fd: ", fd);
         if (close(fd) == -1) {
             int code = errno;
-            throw std::runtime_error(GetErrorMsg("Server::CloseFd() failed, fd=" + std::to_string(fd), code));
+            throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + "close fd(" + std::to_string(fd), code) + ") failed");
         }
     }
 
@@ -456,42 +504,42 @@ class Server
         std::string ip{};
         uint16_t port;
         int fd = Accept(ip, port);
-        if (conns.count(fd) != 0) {
-            throw std::runtime_error("Server::ProcessNewConnection(), fd exist");
+        if (CheckSocketExist(fd)) {
+            throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + "fd(" + std::to_string(fd) +") exist");
         }
 
-        nextConnId++;
         SetNonBlocking(fd);
         ep.Add(fd, EPOLLIN | EPOLLOUT | EPOLLET);
 
-        NewConnection(nextConnId,
-            ConnHandler(
+        nextConnId++;
+        socketMap.Add(fd, nextConnId);
+
+        LogDebug("connection id=", nextConnId, ", ", "fd=", fd);
+        NewConnection(nextConnId, ClientInfo{ip, port},
+            SocketHandler(
                 fd, 
-                ip,
-                port,
                 [&](int fdv){
                     ep.Delete(fdv);
                     CloseFd(fdv);
-                    conns.erase(fdv);
+                    socketMap.Delete(fdv);
                 })
         );
-        conns[fd] = nextConnId;
     }
 
     void ProcessEvent(int fd, uint32_t eventMask)
     {
-        if (conns.count(fd) == 0) {
-            throw std::runtime_error("Server::ProcessEvent(), fd not exist");
+        if (!CheckSocketExist(fd)) {
+            throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ", fd(" + std::to_string(fd) +") not exist");
         }
 
         if (eventMask & EPOLLIN) {
-            CanRead(conns[fd]);
+            CanRead(socketMap[fd]);
         }
         if (eventMask & EPOLLOUT) {
-            CanWrite(conns[fd]);
+            CanWrite(socketMap[fd]);
         }
         if (eventMask & EPOLLERR) {
-            ErrorOccurred(conns[fd]);
+            ErrorOccurred(socketMap[fd]);
         }
     }
 
@@ -509,8 +557,9 @@ class Server
 
     void Release()
     {
-        while (!conns.empty()) {
-            TimeToExit(conns.begin()->second);
+        std::vector<uint64_t> connectionIds = socketMap.GetValues();
+        for (auto connectionId : connectionIds) {
+            TimeToExit(connectionId);
         }
 
         ep.Delete(listenFd);
@@ -518,13 +567,13 @@ class Server
     }
 
 public:
-    std::function<void(uint64_t, ConnHandler)> NewConnection;
+    std::function<void(uint64_t, ClientInfo, SocketHandler)> NewConnection;
     std::function<void(uint64_t)> CanRead;
     std::function<void(uint64_t)> CanWrite;
     std::function<void(uint64_t)> ErrorOccurred;
     std::function<void(uint64_t)> TimeToExit;
 
-    Server(uint16_t port): nextConnId(0), port(port)
+    Server(uint16_t port): nextConnId(0), port(port), ep(Config::GetInstance().epEventCount)
     {}
 
     void Start()
@@ -695,10 +744,10 @@ constexpr char HttpRequest::HEADER_SEP;
 constexpr size_t HttpRequest::HEADER_SEP_LEN;
 constexpr char HttpRequest::CONTENT_LENGTH_HEADER[];
 
-class Session
+class Connection
 {
     uint64_t id;
-    std::string peerInfo;
+    ClientInfo clientInfo;
 
     HttpRequest request;
     std::string response;
@@ -708,31 +757,31 @@ class Session
     bool isClosed;
     bool processComplete;
 
-    ConnHandler connHandler;
+    SocketHandler socketHandler;
 
-    std::function<void()> releaseSession;
+    std::function<void()> release;
 
-    bool PeerClosed()
+    bool ClientClosed()
     {
-        return connHandler.IsEof();
+        return socketHandler.IsEof();
     }
 
 public:
-    Session(uint64_t id, ConnHandler connHandler, std::function<void()> releaseSession):
+    Connection(uint64_t id, ClientInfo clientInfo, SocketHandler socketHandler, std::function<void()> release):
         id(id),
-        connHandler(connHandler),
-        releaseSession(releaseSession),
+        clientInfo(clientInfo),
+        socketHandler(socketHandler),
+        release(release),
         isReadable(false),
         isWritable(false),
         isClosed(false),
         processComplete(false)
     {
-        peerInfo = connHandler.GetPeerInfo();
     }
 
-    const std::string& GetPeerInfo()
+    std::string GetClientInfo()
     {
-        return peerInfo;
+        return "<connection id: " + std::to_string(id) + ">(" + clientInfo.ip + ":" + std::to_string(clientInfo.port) + ")";
     }
 
     void SetReadable()
@@ -765,7 +814,7 @@ public:
             return false;
         }
 
-        if (PeerClosed()) {
+        if (ClientClosed()) {
             return true;
         }
 
@@ -778,8 +827,8 @@ public:
             return;
         }
 
-        std::string s = connHandler.Read();
-        LogDebug(GetPeerInfo(), ". read: \"", s, "\"");
+        std::string s = socketHandler.Read();
+        LogDebug(GetClientInfo(), ". read: \"", s, "\"");
 
         request.Append(s);
 
@@ -797,7 +846,7 @@ public:
             return;
         }
 
-        response = connHandler.Write(response);
+        response = socketHandler.Write(response);
 
         isWritable = false;
         
@@ -809,98 +858,135 @@ public:
     void Close()
     {
         if (isClosed) {
-            throw std::runtime_error("Session::Close(), session is closed");
+            throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ", Connection is closed");
         }
-        connHandler.CloseConn();
-        releaseSession();
-        LogDebug(GetPeerInfo());
+        socketHandler.Close();
+        release();
+        LogDebug(GetClientInfo());
         isClosed = true;
     }
 };
 
-class SessionManager
+class ConnectionMap
 {
-    std::map<uint64_t, std::shared_ptr<Session>> sessions;
+    std::map<uint64_t, std::shared_ptr<Connection>> connections;
+    std::mutex m;
 
-    void ReleaseSession(uint64_t id)
-    {
-        VerifySessionExist(id);
-        sessions.erase(id);
-    }
-   
 public:
-    SessionManager()
+    std::shared_ptr<Connection> operator[](uint64_t id)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        return connections[id];
+    }
+
+    void Add(uint64_t id, std::shared_ptr<Connection> connection)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        connections[id] = connection;
+    }
+
+    void Erase(uint64_t id)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        connections.erase(id);
+    }
+
+    size_t Count(uint64_t id)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        return connections.count(id);
+    }
+
+    size_t Size()
+    {
+        std::lock_guard<std::mutex> lk(m);
+        return connections.size();
+    }
+};
+
+class ConnectionManager
+{
+    ConnectionMap connectionMap;
+
+    void ReleaseConnection(uint64_t id)
+    {
+        VerifyConnectionExist(id);
+        connectionMap.Erase(id);
+    }
+
+    void VerifyConnectionExist(uint64_t id)
+    {
+        if (connectionMap.Count(id) == 0) {
+            throw std::runtime_error(std::string(__PRETTY_FUNCTION__));
+        }
+    }
+
+    void VerifyConnectionNotExist(uint64_t id)
+    {
+        if (connectionMap.Count(id) != 0) {
+            throw std::runtime_error(std::string(__PRETTY_FUNCTION__));
+        }
+    }
+
+public:
+    ConnectionManager()
     {}
 
-    void VerifySessionExist(uint64_t id)
+    void NewConnection(uint64_t id, ClientInfo clientInfo, SocketHandler socketHandler)
     {
-        if (sessions.count(id) == 0) {
-            throw std::runtime_error("SessionManager::VerifySessionExist()");
-        }
-    }
+        VerifyConnectionNotExist(id);
+        std::shared_ptr<Connection> connection = std::make_shared<Connection>(id, clientInfo, socketHandler, std::bind(&ConnectionManager::ReleaseConnection, this, id));
 
-    void VerifySessionNotExist(uint64_t id)
-    {
-        if (sessions.count(id) != 0) {
-            throw std::runtime_error("SessionManager::VerifySessionNotExist()");
-        }
-    }
-
-
-    void NewConnection(uint64_t id, ConnHandler connHandler)
-    {
-        VerifySessionNotExist(id);
-        std::shared_ptr<Session> session = std::make_shared<Session>(id, connHandler, std::bind(&SessionManager::ReleaseSession, this, id));
-        sessions[id] = session;
-        LogDebug(session->GetPeerInfo(), ", session count: ", sessions.size());
+        connectionMap.Add(id, connection);
+        LogDebug(connection->GetClientInfo(), ", connection count: ", connectionMap.Size());
     }
 
     void CanRead(uint64_t id)
     {
-        VerifySessionExist(id);
-        auto session = sessions[id];
-        LogDebug(session->GetPeerInfo());
+        VerifyConnectionExist(id);
+        auto connection = connectionMap[id];
+        LogDebug(connection->GetClientInfo());
 
-        session->SetReadable();
-        session->Read();
+        connection->SetReadable();
+        connection->Read();
     }
 
     void CanWrite(uint64_t id)
     {
-        VerifySessionExist(id);
-        auto session = sessions[id];
-        LogDebug(session->GetPeerInfo());
+        VerifyConnectionExist(id);
+        auto connection = connectionMap[id];
+        LogDebug(connection->GetClientInfo());
 
-        session->SetWritable();
-        session->Write();
+        connection->SetWritable();
+        connection->Write();
     }
 
     void ErrorOccurred(uint64_t id)
     {
-        VerifySessionExist(id);
-        auto session = sessions[id];
-        LogDebug(session->GetPeerInfo());
+        VerifyConnectionExist(id);
+        auto connection = connectionMap[id];
+        LogDebug(connection->GetClientInfo());
 
-        session->Close();
+        connection->Close();
     }
 
     void TimeToExit(uint64_t id)
     {
-        VerifySessionExist(id);
-        auto session = sessions[id];
-        LogDebug(session->GetPeerInfo());
+        VerifyConnectionExist(id);
+        auto connection = connectionMap[id];
+        LogDebug(connection->GetClientInfo());
 
-        session->Close();
+        connection->Close();
     }
 };
 
-void RegisterServerCallback(Server& server, SessionManager& sessionMgr)
+void RegisterServerCallback(Server& server, ConnectionManager& connectionMgr)
 {
-    server.NewConnection = std::bind(&SessionManager::NewConnection, &sessionMgr, std::placeholders::_1, std::placeholders::_2);
-    server.CanRead = std::bind(&SessionManager::CanRead, &sessionMgr, std::placeholders::_1);
-    server.CanWrite = std::bind(&SessionManager::CanWrite, &sessionMgr, std::placeholders::_1);
-    server.ErrorOccurred = std::bind(&SessionManager::ErrorOccurred, &sessionMgr, std::placeholders::_1);
-    server.TimeToExit = std::bind(&SessionManager::TimeToExit, &sessionMgr, std::placeholders::_1);
+    server.NewConnection = std::bind(&ConnectionManager::NewConnection, &connectionMgr, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    server.CanRead = std::bind(&ConnectionManager::CanRead, &connectionMgr, std::placeholders::_1);
+    server.CanWrite = std::bind(&ConnectionManager::CanWrite, &connectionMgr, std::placeholders::_1);
+    server.ErrorOccurred = std::bind(&ConnectionManager::ErrorOccurred, &connectionMgr, std::placeholders::_1);
+    server.TimeToExit = std::bind(&ConnectionManager::TimeToExit, &connectionMgr, std::placeholders::_1);
 }
 
 void SigHandler(int sigNum)
@@ -914,7 +1000,7 @@ void SetExitCondition()
 {
     if (signal(SIGINT, SigHandler) == SIG_ERR) {
         int code = errno;
-        throw std::runtime_error(GetErrorMsg("SetExitCondition(), signal", code));
+        throw std::runtime_error(GetErrorMsg(std::string(__PRETTY_FUNCTION__) + ", signal failed", code));
     }
 }
 
@@ -926,8 +1012,8 @@ int main()
         SetExitCondition();
 
         Server server(Config::GetInstance().port);
-        SessionManager sessionMgr;
-        RegisterServerCallback(server, sessionMgr);
+        ConnectionManager connectionMgr;
+        RegisterServerCallback(server, connectionMgr);
 
         server.Start();
     } catch (const std::exception& e) {
