@@ -1,6 +1,8 @@
 CC=g++
 CFLAGS=-I$(IDIR)
 
+MKDIR_P = mkdir -p
+
 IDIR=./include
 ODIR=./obj
 LDIR=./lib
@@ -16,6 +18,15 @@ OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
 $(ODIR)/%.o: $(LDIR)/%.cpp $(DEPS)
 	$(CC) -c -g -o $@ $< $(CFLAGS)
 
+all: directories a
+
+.PHONY: directories
+
+directories: ${ODIR}
+
+${ODIR}:
+	${MKDIR_P} ${ODIR}
+
 a: main.o $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
@@ -26,3 +37,4 @@ main.o: main.cpp $(DEPS)
 
 clean:
 	rm -f a $(ODIR)/*.o *~ core $(INCDIR)/*~ 
+
