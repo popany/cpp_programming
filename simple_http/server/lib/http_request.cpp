@@ -125,3 +125,39 @@ std::string HttpRequest::GetMessageBody()
 {
     return messageBody;
 }
+
+void HttpRequestHandler::Append(std::string s)
+{
+    httpRequest.Append(s);
+}
+
+bool HttpRequestHandler::CheckIntegrity()
+{
+    return httpRequest.AllReceived();
+}
+
+void HttpRequestHandler::ReadCompleteCallback(int errorCode)
+{
+    if (errorCode != 0) {
+        LogError("errorCode=", std::to_string(errorCode));
+    }
+    httpRequest.PrintRequest();
+    std::string receivedMsg = httpRequest.GetMessageBody();
+    std::string responseMsg = "hello\r\n";
+    
+    contentToWrite = "HTTP/1.1 200 OK\r\n";
+    contentToWrite += "Context-Length: " +  std::to_string(responseMsg.size()) + "\r\n";
+    contentToWrite += "\r\n";
+    contentToWrite += responseMsg;
+}
+
+void HttpRequestHandler::Write(std::string s)
+{
+}
+
+void HttpRequestHandler::WriteCompleteCallback(int errorCode)
+{
+    if (errorCode != 0) {
+        LogError("errorCode=", std::to_string(errorCode));
+    }
+}

@@ -9,18 +9,12 @@
 
 SocketHandler::SocketHandler(int fd, std::function<void(int)> close):
     fd(fd),
-    isEof(false),
     close(close)
 {}
 
 void SocketHandler::Close()
 {
     close(fd);
-}
-
-bool SocketHandler::IsEof()
-{
-    return isEof;
 }
 
 std::string SocketHandler::Read()
@@ -40,13 +34,8 @@ std::string SocketHandler::Read()
         } else if (n > 0) {
             s += &buf[0];
         } else {
-            isEof = true;
             break;
         }
-    }
-
-    if (s.empty() && !isEof) {
-        LogDebug("invalid read");
     }
 
     return s;

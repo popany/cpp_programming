@@ -12,6 +12,7 @@
 #include "config.h"
 #include "server.h"
 #include "connection.h"
+#include "http_request.h"
 
 int main()
 {
@@ -21,7 +22,7 @@ int main()
         SetExitCondition();
 
         Server server(Config::GetInstance().port, Config::GetInstance().epEventCount);
-        ConnectionManager connectionMgr;
+        ConnectionManager connectionMgr([]{ return std::shared_ptr<RequestHandler>(new HttpRequestHandler()); });
         server.RegisterReportFunctions(
             std::bind(&ConnectionManager::NewConnection, &connectionMgr, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             std::bind(&ConnectionManager::CanRead, &connectionMgr, std::placeholders::_1),

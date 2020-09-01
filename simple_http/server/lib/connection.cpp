@@ -6,34 +6,30 @@ class Connection
 {
     uint64_t id;
     ClientInfo clientInfo;
-
-    HttpRequest request;
-    std::string response;
+    SocketHandler socketHandler;
+    std::function<void()> release;
 
     bool isReadable;
     bool isWritable;
+    bool isToClose;
+    bool isError;
     bool isClosed;
-    bool processComplete;
 
-    SocketHandler socketHandler;
-
-    std::function<void()> release;
-
-    bool ClientClosed()
-    {
-        return socketHandler.IsEof();
-    }
+    std::shared_ptr<RequestHandler> requestHandler;
+    std::string response;
 
 public:
-    Connection(uint64_t id, ClientInfo clientInfo, SocketHandler socketHandler, std::function<void()> release):
+    Connection(uint64_t id, ClientInfo clientInfo, SocketHandler socketHandler, std::shared_ptr<RequestHandler> requestHandler, std::function<void()> release):
         id(id),
         clientInfo(clientInfo),
         socketHandler(socketHandler),
+        requestHandler(requestHandler),
         release(release),
         isReadable(false),
         isWritable(false),
-        isClosed(false),
-        processComplete(false)
+        isToClose(false),
+        isError(false),
+        isClosed(false)
     {
     }
 
@@ -52,31 +48,14 @@ public:
         isWritable = true;
     }
 
-    void Process()
+    void SetError()
     {
-        request.PrintRequest();
-        std::string receivedMsg = request.GetMessageBody();
-        std::string responseMsg = "hello\r\n";
-        
-        response = "HTTP/1.1 200 OK\r\n";
-        response += "Context-Length: " +  std::to_string(responseMsg.size()) + "\r\n";
-        response += "\r\n";
-        response += responseMsg;
-
-        processComplete = true;
+        isError = true;
     }
 
-    bool CanClose()
+    void SetToClose()
     {
-        if (!response.empty()) {
-            return false;
-        }
-
-        if (ClientClosed()) {
-            return true;
-        }
-
-        return processComplete;
+        isToClose = true;
     }
 
     void Read()
@@ -84,32 +63,34 @@ public:
         if (!isReadable) {
             return;
         }
+        isReadable = false;
 
         std::string s = socketHandler.Read();
         LogDebug(GetClientInfo(), ". read: \"", s, "\"");
 
-        request.Append(s);
+        requestHandler->Append(s);
 
-        if (request.AllReceived()) {
-            Process();
+        if (requestHandler->CheckIntegrity()) {
+            requestHandler->ReadCompleteCallback(0);
         }
-
-        isReadable = false;
-        Write();
     }
 
-    void Write()
+    void Write(std::string s)
     {
         if (!isWritable) {
+            return;
+        }
+        isWritable = false;
+
+        response += s;
+        if (response.empty()) {
             return;
         }
 
         response = socketHandler.Write(response);
 
-        isWritable = false;
-        
-        if (CanClose()) {
-            Close();
+        if (response.empty()) {
+            requestHandler->WriteCompleteCallback(0);
         }
     }
 
@@ -120,8 +101,8 @@ public:
         }
         socketHandler.Close();
         release();
-        LogDebug(GetClientInfo());
         isClosed = true;
+        LogDebug(GetClientInfo());
     }
 };
 
@@ -182,14 +163,21 @@ void ConnectionManager::VerifyConnectionNotExist(uint64_t id)
     }
 }
 
-ConnectionManager::ConnectionManager():
+ConnectionManager::ConnectionManager(std::function<std::shared_ptr<RequestHandler>()> createRequestHandler) :
+    createRequestHandler(createRequestHandler),
     connectionMap(std::make_shared<ConnectionMap>())
 {}
 
 void ConnectionManager::NewConnection(uint64_t id, ClientInfo clientInfo, SocketHandler socketHandler)
 {
     VerifyConnectionNotExist(id);
-    std::shared_ptr<Connection> connection = std::make_shared<Connection>(id, clientInfo, socketHandler, std::bind(&ConnectionManager::ReleaseConnection, this, id));
+    std::shared_ptr<Connection> connection = std::make_shared<Connection>(
+        id,
+        clientInfo,
+        socketHandler,
+        createRequestHandler(),
+        std::bind(&ConnectionManager::ReleaseConnection, this, id)
+    );
 
     connectionMap->Add(id, connection);
     LogDebug(connection->GetClientInfo(), ", connection count: ", connectionMap->Size());
@@ -202,7 +190,6 @@ void ConnectionManager::CanRead(uint64_t id)
     LogDebug(connection->GetClientInfo());
 
     connection->SetReadable();
-    connection->Read();
 }
 
 void ConnectionManager::CanWrite(uint64_t id)
@@ -212,7 +199,6 @@ void ConnectionManager::CanWrite(uint64_t id)
     LogDebug(connection->GetClientInfo());
 
     connection->SetWritable();
-    connection->Write();
 }
 
 void ConnectionManager::ErrorOccurred(uint64_t id)
@@ -221,7 +207,7 @@ void ConnectionManager::ErrorOccurred(uint64_t id)
     auto connection = connectionMap->GetValue(id);
     LogDebug(connection->GetClientInfo());
 
-    connection->Close();
+    connection->SetError();
 }
 
 void ConnectionManager::TimeToExit(uint64_t id)
@@ -230,5 +216,5 @@ void ConnectionManager::TimeToExit(uint64_t id)
     auto connection = connectionMap->GetValue(id);
     LogDebug(connection->GetClientInfo());
 
-    connection->Close();
+    connection->SetToClose();
 }

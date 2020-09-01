@@ -9,7 +9,7 @@ LDIR=./lib
 
 LIBS=-lpthread
 
-_DEPS= log.h utils.h config.h server.h connection.h socket_handler.h common_types.h http_request.h
+_DEPS= log.h utils.h config.h server.h connection.h socket_handler.h common_types.h http_request.h request_handler.h
 DEPS=$(patsubst %,$(IDIR)/%,$(_DEPS))
 
 _OBJ=log.o config.o server.o connection.o socket_handler.o http_request.o
@@ -37,4 +37,3 @@ main.o: main.cpp $(DEPS)
 
 clean:
 	rm -f a $(ODIR)/*.o *~ core $(INCDIR)/*~ 
-

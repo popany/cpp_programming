@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "utils.h"
 #include "log.h"
+#include "request_handler.h"
 
 class HttpRequest
 {
@@ -36,4 +37,17 @@ public:
     void PrintRequest();
     bool AllReceived();
     std::string GetMessageBody();
+};
+
+class HttpRequestHandler : public RequestHandler
+{
+    HttpRequest httpRequest;
+    std::string contentToWrite;
+
+public:
+    void Append(std::string s) override;
+    bool CheckIntegrity() override;
+    void ReadCompleteCallback(int errorCode) override;
+    void WriteCompleteCallback(int errorCode) override;
+    void Write(std::string s) override;
 };
