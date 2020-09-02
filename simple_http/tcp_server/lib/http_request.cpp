@@ -149,10 +149,13 @@ void HttpRequestHandler::ReadCompleteCallback(int errorCode)
     contentToWrite += "Context-Length: " +  std::to_string(responseMsg.size()) + "\r\n";
     contentToWrite += "\r\n";
     contentToWrite += responseMsg;
+
+    Write(contentToWrite);
 }
 
 void HttpRequestHandler::Write(std::string s)
 {
+    RequestHandler::Write(s);
 }
 
 void HttpRequestHandler::WriteCompleteCallback(int errorCode)

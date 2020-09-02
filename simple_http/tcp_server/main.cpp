@@ -1,12 +1,6 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <stdexcept>
-#include <map>
-#include <memory>
-#include <mutex>
+#include <exception>
+#include <functional>
+#include <string>
 #include "log.h"
 #include "utils.h"
 #include "config.h"
@@ -22,7 +16,7 @@ int main()
         SetExitCondition();
 
         Server server(Config::GetInstance().port, Config::GetInstance().epEventCount);
-        ConnectionManager connectionMgr([]{ return std::shared_ptr<RequestHandler>(new HttpRequestHandler()); });
+        ConnectionManager connectionMgr([](std::function<void(std::string)> f){ return std::shared_ptr<RequestHandler>(new HttpRequestHandler(f)); });
         server.RegisterReportFunctions(
             std::bind(&ConnectionManager::NewConnection, &connectionMgr, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
             std::bind(&ConnectionManager::CanRead, &connectionMgr, std::placeholders::_1),
@@ -32,6 +26,7 @@ int main()
         );
 
         server.Start();
+        connectionMgr.Close();
     } catch (const std::exception& e) {
         LogError("exception: ", e.what());
     }

@@ -45,6 +45,10 @@ class HttpRequestHandler : public RequestHandler
     std::string contentToWrite;
 
 public:
+    HttpRequestHandler(std::function<void(std::string)> write):
+        RequestHandler(write)
+    {}
+
     void Append(std::string s) override;
     bool CheckIntegrity() override;
     void ReadCompleteCallback(int errorCode) override;

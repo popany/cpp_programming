@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <string.h>
 #include <algorithm>
+#include <condition_variable>
+#include <mutex>
 
 inline std::string GetErrorMsg(std::string info, int errorCode)
 {
@@ -25,3 +27,31 @@ inline void Trim(std::string &s)
     Ltrim(s);
     Rtrim(s);
 }
+
+class EventNotifier
+{
+    bool signaled;
+    std::condition_variable cv;
+    std::mutex m;
+
+public:
+    EventNotifier():
+        signaled(false)
+    {}
+
+    void Set()
+    {
+        {
+            std::lock_guard<std::mutex> lk(m);
+            signaled = true;
+        }
+        cv.notify_one();
+    }
+
+    void Wait()
+    {
+        std::unique_lock<std::mutex> lk(m);
+        cv.wait(lk, [&] { return signaled; });
+        signaled = false;
+    }
+};
