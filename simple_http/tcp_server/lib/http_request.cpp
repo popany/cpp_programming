@@ -126,18 +126,23 @@ std::string HttpRequest::GetMessageBody()
     return messageBody;
 }
 
-void HttpRequestHandler::Append(std::string s)
+void HttpRequestHandler::AppendReceivedData(std::string s)
 {
     httpRequest.Append(s);
 }
 
-bool HttpRequestHandler::CheckIntegrity()
+bool HttpRequestHandler::CheckDataIntegrity()
 {
     return httpRequest.AllReceived();
 }
 
 void HttpRequestHandler::ReadCompleteCallback(int errorCode)
 {
+    if (!isReadWaiting) {
+        return;
+    }
+    isReadWaiting = false;
+
     if (errorCode != 0) {
         LogError("errorCode=", std::to_string(errorCode));
     }
@@ -156,10 +161,16 @@ void HttpRequestHandler::ReadCompleteCallback(int errorCode)
 void HttpRequestHandler::Write(std::string s)
 {
     RequestHandler::Write(s);
+    isWriteWaiting = true;
 }
 
 void HttpRequestHandler::WriteCompleteCallback(int errorCode)
 {
+    if (!isWriteWaiting) {
+        return;
+    }
+    isWriteWaiting = false;
+
     if (errorCode != 0) {
         LogError("errorCode=", std::to_string(errorCode));
     }

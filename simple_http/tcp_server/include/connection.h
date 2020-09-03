@@ -11,6 +11,13 @@
 #include "socket_handler.h"
 #include "request_handler.h"
 
+enum ConnectionErrorCode
+{
+    NO_ERROR = 0,
+    SOCKET_ERROR = 1,
+    SOCKET_CLOSED = 2,
+};
+
 class ConnectionMap;
 class WriteCache;
 class Connection;
@@ -49,6 +56,7 @@ class ConnectionManager
 
 public:
     ConnectionManager(std::function<std::shared_ptr<RequestHandler>(std::function<void(std::string)>)> createRequestHandler, int processEventThreadCount = DEFAULT_PROCESS_EVENT_THREAD_COUNT);
+    ~ConnectionManager();
     void NewConnection(uint64_t id, ClientInfo clientInfo, SocketHandler socketHandler);
     void CanRead(uint64_t id);
     void CanWrite(uint64_t id);

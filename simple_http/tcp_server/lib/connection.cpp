@@ -16,8 +16,7 @@ class Connection
 
     std::atomic_int isReadable;
     std::atomic_int isWritable;
-    std::atomic_int isToClose;
-    std::atomic_int isError;
+    std::atomic_int errorCode;
     bool isClosed;
     bool isReading;
     bool isWriting;
@@ -34,8 +33,7 @@ public:
         release(release),
         isReadable(0),
         isWritable(0),
-        isToClose(0),
-        isError(0),
+        errorCode(ConnectionErrorCode::NO_ERROR),
         isClosed(false),
         isReading(false),
         isWriting(false)
@@ -64,22 +62,22 @@ public:
 
     void SetError()
     {
-        isError++;
+        errorCode = ConnectionErrorCode::SOCKET_ERROR;
     }
 
     void SetToClose()
     {
-        isToClose++;
+        errorCode = ConnectionErrorCode::SOCKET_CLOSED;
     }
 
     bool ReadEventHappend()
     {
-        return isReadable | isError | isToClose;
+        return isReadable | errorCode;
     }
 
     bool WriteEventHappend()
     {
-        return isWritable | isError | isToClose;
+        return isWritable | errorCode;
     }
 
     bool IsReading()
@@ -99,6 +97,11 @@ public:
 
     void Read()
     {
+        if (errorCode != ConnectionErrorCode::NO_ERROR) {
+            requestHandler->ReadCompleteCallback(errorCode);
+            Close();
+        }
+
         if (!isReadable) {
             return;
         }
@@ -107,10 +110,14 @@ public:
         std::string s = socketHandler.Read();
         LogDebug(GetClientInfo(), ". read: \"", s, "\"");
 
-        requestHandler->Append(s);
+        requestHandler->AppendReceivedData(s);
 
-        if (requestHandler->CheckIntegrity()) {
-            requestHandler->ReadCompleteCallback(0);
+        if (requestHandler->CheckDataIntegrity()) {
+            requestHandler->ReadCompleteCallback(ConnectionErrorCode::NO_ERROR);
+        }
+
+        if (!requestHandler->IsWaiting()) {
+            Close();
         }
     }
 
@@ -136,6 +143,11 @@ public:
 
     void Write()
     {
+        if (errorCode != ConnectionErrorCode::NO_ERROR) {
+            requestHandler->WriteCompleteCallback(errorCode);
+            Close();
+        }
+
         if (!isWritable) {
             return;
         }
@@ -148,19 +160,28 @@ public:
         response = socketHandler.Write(response);
 
         if (response.empty()) {
-            requestHandler->WriteCompleteCallback(0);
+            requestHandler->WriteCompleteCallback(ConnectionErrorCode::NO_ERROR);
+        }
+
+        if (!requestHandler->IsWaiting()) {
+            Close();
         }
     }
 
     void Close()
     {
         if (isClosed) {
-            throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ", Connection is closed");
+            LogWarn("Connection is closed");
         }
         socketHandler.Close();
         release();
         isClosed = true;
         LogDebug(GetClientInfo());
+    }
+
+    bool CanClose()
+    {
+        return !requestHandler->IsWaiting();
     }
 };
 
@@ -285,6 +306,11 @@ ConnectionManager::ConnectionManager(std::function<std::shared_ptr<RequestHandle
     }
 }
 
+ConnectionManager::~ConnectionManager()
+{
+    Close();
+}
+
 void ConnectionManager::ReleaseConnection(uint64_t id)
 {
     try {
@@ -392,6 +418,7 @@ void ConnectionManager::CheckToInQueueRead(const std::shared_ptr<Connection>& co
 {
     if (NeedInQueueRead(connection)) {
         readQueue->InQueue(connection);
+        readInQueueHappened.Set();
     }
 }
 
@@ -402,11 +429,13 @@ void ConnectionManager::ProcessRead(int id)
     while (!closed) {
         readInQueueHappened.Wait();
 
-        for (;;) {
+        while (!closed) {
             std::shared_ptr<Connection> connection;
             if (!readQueue->DeQueue(connection)) {
                 break;
             }
+
+            LogDebug("connection id: ", connection->GetConnectionId());
 
             connection->Read();
         
@@ -415,6 +444,8 @@ void ConnectionManager::ProcessRead(int id)
             }
         }
     }
+
+    readInQueueHappened.Set();
 }
 
 void ConnectionManager::AddToWriteCache(uint64_t connectionId, std::string contentToWrite)
@@ -429,7 +460,7 @@ void ConnectionManager::AddToWriteCache(uint64_t connectionId, std::string conte
 bool ConnectionManager::NeedInQueueWrite(const std::shared_ptr<Connection>& connection)
 {
     std::lock_guard<std::mutex> lk(protectIsWriting);
-    if (connection->WriteEventHappend() && writeCache->HasContentToWrite(connection->GetConnectionId()) && !connection->IsWriting()) {
+    if (((connection->WriteEventHappend() && writeCache->HasContentToWrite(connection->GetConnectionId())) || connection->CanClose()) && !connection->IsWriting()) {
         connection->SetWriting();
         return true;
     }
@@ -453,6 +484,7 @@ void ConnectionManager::CheckToInQueueWrite(const std::shared_ptr<Connection>& c
 {
     if (NeedInQueueWrite(connection)) {
         writeQueue->InQueue(connection);
+        writeInQueueHappened.Set();
     }
 }
 
@@ -463,11 +495,14 @@ void ConnectionManager::ProcessWrite(int id)
     while (!closed) {
         writeInQueueHappened.Wait();
 
-        for (;;) {
+        while (!closed) {
             std::shared_ptr<Connection> connection;
             if (!writeQueue->DeQueue(connection)) {
                 break;
             }
+
+            LogDebug("connection id: ", connection->GetConnectionId());
+
             std::string contentToWrite = writeCache->Get(connection->GetConnectionId());
             connection->SetResponse(contentToWrite);
             connection->Write();
@@ -477,9 +512,17 @@ void ConnectionManager::ProcessWrite(int id)
             }
         }
     }
+
+    writeInQueueHappened.Set();
 }
 
 void ConnectionManager::Close()
 {
+    if (closed) {
+        return;
+    }
+
     closed = true;
+    writeInQueueHappened.Set();
+    readInQueueHappened.Set();
 }

@@ -49,8 +49,8 @@ public:
         RequestHandler(write)
     {}
 
-    void Append(std::string s) override;
-    bool CheckIntegrity() override;
+    void AppendReceivedData(std::string s) override;
+    bool CheckDataIntegrity() override;
     void ReadCompleteCallback(int errorCode) override;
     void WriteCompleteCallback(int errorCode) override;
     void Write(std::string s) override;
