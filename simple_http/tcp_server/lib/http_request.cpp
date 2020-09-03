@@ -160,6 +160,7 @@ void HttpRequestHandler::ReadCompleteCallback(int errorCode)
 
 void HttpRequestHandler::Write(std::string s)
 {
+    LogDebug(s);
     RequestHandler::Write(s);
     isWriteWaiting = true;
 }

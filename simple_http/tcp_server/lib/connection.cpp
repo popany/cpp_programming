@@ -450,11 +450,10 @@ void ConnectionManager::ProcessRead(int id)
 
 void ConnectionManager::AddToWriteCache(uint64_t connectionId, std::string contentToWrite)
 {
+    LogDebug("connectionId: ", connectionId, "content: \"", contentToWrite, "\"");
     writeCache->Add(connectionId, contentToWrite);
     auto connection = connectionMap->GetValue(connectionId);
-    if (NeedInQueueWrite(connection)) {
-        writeQueue->InQueue(connection);
-    }
+    CheckToInQueueWrite(connection);
 }
 
 bool ConnectionManager::NeedInQueueWrite(const std::shared_ptr<Connection>& connection)
