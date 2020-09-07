@@ -1,39 +1,36 @@
 CC=g++
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) -g
 
 MKDIR_P = mkdir -p
 
 IDIR=./include
 ODIR=./obj
-LDIR=./lib
+SRC=./src
 
 LIBS=-lpthread
 
-_DEPS= log.h utils.h config.h server.h connection.h socket_handler.h common_types.h http_request.h request_handler.h
+_DEPS=log.h utils.h server.h connection.h socket_handler.h common_types.h request_handler.h
 DEPS=$(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ=log.o config.o server.o connection.o socket_handler.o http_request.o
-OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
+_OBJS= server.o connection.o socket_handler.o
+OBJS=$(patsubst %,$(ODIR)/%,$(_OBJS))
 
-$(ODIR)/%.o: $(LDIR)/%.cpp $(DEPS)
-	$(CC) -c -g -o $@ $< $(CFLAGS)
+$(ODIR)/%.o: $(SRC)/%.cpp $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
 
-all: directories a
-
-.PHONY: directories
+all: directories tcp_server.a
 
 directories: ${ODIR}
 
 ${ODIR}:
 	${MKDIR_P} ${ODIR}
 
-a: main.o $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-
-main.o: main.cpp $(DEPS)
-	$(CC) -c -g -o $@ $< $(CFLAGS)
-
-.PHONY: clean
+tcp_server.a: $(OBJS)
+	ar rcs $@ $^
 
 clean:
-	rm -f a $(ODIR)/*.o *~ core $(INCDIR)/*~ 
+	rm -f tcp_server.a $(ODIR)/*.o *~ core $(INCDIR)/*~ 
+
+.PHONY: all
+.PHONY: directories
+.PHONY: clean
