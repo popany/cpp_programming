@@ -1,0 +1,106 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "helloworld greeter_server",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/helloworld/cmake/build/greeter_server",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/helloworld/cmake/build",
+            "environment": [{"name": "LD_LIBRARY_PATH", "value": "/usr1/grpc-debug/lib:/usr1/grpc-debug/lib64:"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "helloworld greeter_client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/helloworld/cmake/build/greeter_client",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/helloworld/cmake/build",
+            "environment": [{"name": "LD_LIBRARY_PATH", "value": "/usr1/grpc-debug/lib:/usr1/grpc-debug/lib64:"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "helloworld greeter_async_server",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/helloworld/cmake/build/greeter_async_server",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/helloworld/cmake/build",
+            "environment": [{"name": "LD_LIBRARY_PATH", "value": "/usr1/grpc-debug/lib:/usr1/grpc-debug/lib64:"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "helloworld greeter_async_client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/helloworld/cmake/build/greeter_async_client",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/helloworld/cmake/build",
+            "environment": [{"name": "LD_LIBRARY_PATH", "value": "/usr1/grpc-debug/lib:/usr1/grpc-debug/lib64:"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "helloworld greeter_async_client2",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/helloworld/cmake/build/greeter_async_client2",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/helloworld/cmake/build",
+            "environment": [{"name": "LD_LIBRARY_PATH", "value": "/usr1/grpc-debug/lib:/usr1/grpc-debug/lib64:"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
+    ]
+}
