@@ -103,6 +103,13 @@ void SetNonBlocking(int fd)
     flags = fcntl(fd, F_SETFL, flags);
 }
 
+void SetBlocking(int fd)
+{
+    int flags  = fcntl(fd, F_GETFL, -1 );
+    flags &= ~O_NONBLOCK;
+    flags = fcntl(fd, F_SETFL, flags);
+}
+
 int Socket(int domain, int type, int protocol)
 {
     int fd = socket(domain, type, protocol);
@@ -232,22 +239,28 @@ void Process(int fd, const Config& config)
             }
         }
 
+        std::string r = Read(STDIN_FILENO);
+        if (r == "exit\n") {
+            SetBlocking(STDIN_FILENO);
+            break;
+        }
         if (config.write) {
-            std::string s = Read(STDIN_FILENO);
-            if (s == "exit") {
-                break;
-            }
-            w += s;
+            w += r;
             w = Write(fd, w);
         }
     }
 }
 
-void TypeToExit()
+void TypeEToExit()
 {
-    std::cout << "type to exit" << std::endl;
-    std::string s;
-    std::cin >> s;
+    for (;;) {
+        std::cout << "type 'e' to exit" << std::endl;
+        std::string s;
+        std::cin >> s;
+        if (s == "e") {
+            break;
+        }
+    }
 }
 
 void Run(const Config& config)
@@ -271,7 +284,7 @@ void Run(const Config& config)
         Connect(fd, config.dstAddr, config.dstPort);    
     }
 
-    TypeToExit();
+    TypeEToExit();
 }
 
 int main(int argc, const char* argv[])
