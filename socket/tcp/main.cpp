@@ -282,6 +282,7 @@ void Run(const Config& config)
 
     if (config.connect) {
         Connect(fd, config.dstAddr, config.dstPort);    
+        Process(fd, config);
     }
 
     TypeEToExit();
