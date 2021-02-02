@@ -235,6 +235,14 @@ int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struc
     return nReady;
 }
 
+void Shutdown(int sockfd, int how)
+{
+    if (shutdown(sockfd, how) == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+}
+
 void Process(int fd, const Config& config)
 {
     SetNonBlocking(fd);
@@ -255,6 +263,7 @@ void Process(int fd, const Config& config)
             std::string s = Read(fd);
             if (!s.empty()) {
                 std::cout << s;
+                std::cout.flush();
             }
         }
 
@@ -263,6 +272,18 @@ void Process(int fd, const Config& config)
             if (r == "exit\n") {
                 SetBlocking(STDIN_FILENO);
                 break;
+            } else if (r == "shutdown read\n") {
+                std::cout << "SHUT_RD" << std::endl;
+                Shutdown(fd, SHUT_RD);
+                continue;
+            } else if (r == "shutdown write\n") {
+                std::cout << "SHUT_WR" << std::endl;
+                Shutdown(fd, SHUT_WR);
+                continue;
+            } else if (r == "shutdown both\n") {
+                std::cout << "SHUT_RDWR" << std::endl;
+                Shutdown(fd, SHUT_RDWR);
+                continue;
             }
 
             if (config.write) {
