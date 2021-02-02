@@ -224,6 +224,17 @@ std::string Write(int fd, std::string s)
     return s;
 }
 
+int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
+{
+    int nReady = select(nfds, readfds, writefds, exceptfds, timeout);
+
+    if (nReady == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+    return nReady;
+}
+
 void Process(int fd, const Config& config)
 {
     SetNonBlocking(fd);
@@ -231,22 +242,33 @@ void Process(int fd, const Config& config)
 
     std::string w;
 
+    fd_set  rSet, allSet;
+    FD_ZERO(&allSet);
+    FD_SET(STDIN_FILENO, &allSet);
+    FD_SET(fd, &allSet);
+
     for (;;) {
-        if (config.read) {
+        rSet = allSet;
+        Select(fd + 1, &rSet, NULL, NULL, NULL);
+
+        if (FD_ISSET(fd, &rSet) && config.read) {
             std::string s = Read(fd);
             if (!s.empty()) {
                 std::cout << s;
             }
         }
 
-        std::string r = Read(STDIN_FILENO);
-        if (r == "exit\n") {
-            SetBlocking(STDIN_FILENO);
-            break;
-        }
-        if (config.write) {
-            w += r;
-            w = Write(fd, w);
+        if (FD_ISSET(STDIN_FILENO, &rSet)) {
+            std::string r = Read(STDIN_FILENO);
+            if (r == "exit\n") {
+                SetBlocking(STDIN_FILENO);
+                break;
+            }
+
+            if (config.write) {
+                w += r;
+                w = Write(fd, w);
+            }
         }
     }
 }
