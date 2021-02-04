@@ -271,8 +271,6 @@ void Process(int fd, const Config& config)
     SetNonBlocking(fd);
     SetNonBlocking(STDIN_FILENO);
 
-    std::string w{};
-
     std::vector<pollfd> fds(3);
 
     fds[0].fd = STDIN_FILENO;
@@ -280,14 +278,20 @@ void Process(int fd, const Config& config)
     fds[1].fd = fd;
     fds[1].events = POLLIN | POLLOUT;
 
+    std::string w{};
+
     for (;;) {
         Poll(&fds[0], fds.size(), -1);
 
         if (fds[1].revents & POLLIN && config.read) {
-            std::string s = Read(fd);
+            bool fdClosed = false;
+            std::string s = Read(fd, fdClosed);
             if (!s.empty()) {
                 std::cout << s;
                 std::cout.flush();
+            }
+            if (fdClosed) {
+                fds[1].events &= ~POLLIN;
             }
         }
 
@@ -345,16 +349,16 @@ void Process(int fd, const Config& config)
     SetNonBlocking(fd);
     SetNonBlocking(STDIN_FILENO);
 
-    std::string w{};
-
     fd_set rSet;
     FD_ZERO(&rSet);
     FD_SET(STDIN_FILENO, &rSet);
     FD_SET(fd, &rSet);
-    bool fdClosed = false;
 
     fd_set wSet;
     FD_ZERO(&wSet);
+
+    bool fdClosed = false;
+    std::string w{};
 
     for (;;) {
         Select(fd + 1, &rSet, &wSet, NULL, NULL);
