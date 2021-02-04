@@ -1,5 +1,6 @@
 CC=g++
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) -g
+USER_DEFINES=
 
 IDIR=./
 ODIR=./
@@ -14,7 +15,7 @@ _OBJ=main.o
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.cpp $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(USER_DEFINES)
 
 a: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)

@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <error.h>
@@ -10,6 +11,10 @@
 #include <iostream>
 #include <string>
 #include <thread>
+
+#ifdef USE_POLL
+#  include <poll.h>
+#endif
 
 // https://man7.org/linux/man-pages/man7/ip.7.html
 // https://man7.org/linux/man-pages/man2/bind.2.html
@@ -96,6 +101,14 @@ public:
     }
 };
 
+void Signal(int signum, sighandler_t handler)
+{
+    if (signal(signum, handler) == SIG_ERR) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+}
+
 void SetNonBlocking(int fd)
 {
     int flags  = fcntl(fd, F_GETFL, -1 );
@@ -174,8 +187,9 @@ int Accept(int fd)
     return connFd;
 }
 
-std::string Read(int fd)
+std::string Read(int fd, bool& peerClosed)
 {
+    peerClosed = false;
     std::string s{};
     const size_t bufSize = 1000;
     std::vector<char> buf(bufSize + 1, 0);
@@ -192,10 +206,17 @@ std::string Read(int fd)
             buf[n] = 0;
             s += &buf[0];
         } else {
+            peerClosed = true;
             break;
         }
     }
     return s;
+}
+
+std::string Read(int fd)
+{
+    bool peerClosed = false;
+    return Read(fd, peerClosed);
 }
 
 std::string Write(int fd, std::string s)
@@ -224,6 +245,90 @@ std::string Write(int fd, std::string s)
     return s;
 }
 
+void Shutdown(int sockfd, int how)
+{
+    if (shutdown(sockfd, how) == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+}
+
+#ifdef USE_POLL
+
+int Poll(struct pollfd *fds, nfds_t nfds, int timeout)
+{
+    int nReady = poll(fds, nfds, timeout);
+
+    if (nReady == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+    return nReady;
+}
+
+void Process(int fd, const Config& config)
+{
+    SetNonBlocking(fd);
+    SetNonBlocking(STDIN_FILENO);
+
+    std::string w{};
+
+    std::vector<pollfd> fds(3);
+
+    fds[0].fd = STDIN_FILENO;
+    fds[0].events = POLLIN;
+    fds[1].fd = fd;
+    fds[1].events = POLLIN | POLLOUT;
+
+    for (;;) {
+        Poll(&fds[0], fds.size(), -1);
+
+        if (fds[1].revents & POLLIN && config.read) {
+            std::string s = Read(fd);
+            if (!s.empty()) {
+                std::cout << s;
+                std::cout.flush();
+            }
+        }
+
+        if (fds[0].revents & POLLIN) {
+            std::string r = Read(STDIN_FILENO);
+            if (r == "exit\n") {
+                SetBlocking(STDIN_FILENO);
+                break;
+            } else if (r == "shutdown read\n") {
+                std::cout << "SHUT_RD" << std::endl;
+                Shutdown(fd, SHUT_RD);
+                continue;
+            } else if (r == "shutdown write\n") {
+                std::cout << "SHUT_WR" << std::endl;
+                Shutdown(fd, SHUT_WR);
+                continue;
+            } else if (r == "shutdown both\n") {
+                std::cout << "SHUT_RDWR" << std::endl;
+                Shutdown(fd, SHUT_RDWR);
+                continue;
+            }
+
+            if (config.write) {
+                w += r;
+            }
+        }
+
+        if (fds[1].revents & POLLOUT || !w.empty()) {
+            w = Write(fd, w);
+        }
+
+        if (!w.empty()) {
+            fds[1].events |= POLLOUT;
+        } else {
+            fds[1].events &= ~POLLOUT;
+        }
+    }
+}
+
+# else
+
 int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
 {
     int nReady = select(nfds, readfds, writefds, exceptfds, timeout);
@@ -235,36 +340,37 @@ int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struc
     return nReady;
 }
 
-void Shutdown(int sockfd, int how)
-{
-    if (shutdown(sockfd, how) == -1) {
-        int errorCode = errno;
-        throw std::runtime_error(ERROR_MESSAGE(errorCode));
-    }
-}
-
 void Process(int fd, const Config& config)
 {
     SetNonBlocking(fd);
     SetNonBlocking(STDIN_FILENO);
 
-    std::string w;
+    std::string w{};
 
-    fd_set  rSet, allSet;
-    FD_ZERO(&allSet);
-    FD_SET(STDIN_FILENO, &allSet);
-    FD_SET(fd, &allSet);
+    fd_set rSet;
+    FD_ZERO(&rSet);
+    FD_SET(STDIN_FILENO, &rSet);
+    FD_SET(fd, &rSet);
+    bool fdClosed = false;
+
+    fd_set wSet;
+    FD_ZERO(&wSet);
 
     for (;;) {
-        rSet = allSet;
-        Select(fd + 1, &rSet, NULL, NULL, NULL);
+        Select(fd + 1, &rSet, &wSet, NULL, NULL);
 
         if (FD_ISSET(fd, &rSet) && config.read) {
-            std::string s = Read(fd);
+            std::string s = Read(fd, fdClosed);
             if (!s.empty()) {
                 std::cout << s;
                 std::cout.flush();
             }
+            if (fdClosed) {
+                FD_CLR(fd, &rSet);
+            }
+        }
+        if (!fdClosed) {
+            FD_SET(fd, &rSet);
         }
 
         if (FD_ISSET(STDIN_FILENO, &rSet)) {
@@ -288,11 +394,22 @@ void Process(int fd, const Config& config)
 
             if (config.write) {
                 w += r;
-                w = Write(fd, w);
             }
+        } else {
+            FD_SET(STDIN_FILENO, &rSet);
+        }
+
+        if (FD_ISSET(fd, &wSet) || !w.empty()) {
+            w = Write(fd, w);
+        }
+
+        if (!w.empty()) {
+            FD_SET(fd, &wSet);
         }
     }
 }
+
+#endif
 
 void TypeEToExit()
 {
@@ -336,6 +453,8 @@ int main(int argc, const char* argv[])
     try {
         Config config;
         config.set(argc, argv);
+
+        Signal(SIGPIPE, SIG_IGN);
         Run(config);
     } catch (const std::exception& ex) {
         std::cout << ex.what() << std::endl;

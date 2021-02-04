@@ -1,5 +1,11 @@
 # readme
 
+## make
+
+### USE_POLL
+
+    make USER_DEFINES="-DUSE_POLL"
+
 ## test simultaneous open
 
 - On host 172.17.0.2 run
