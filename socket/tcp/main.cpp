@@ -21,7 +21,7 @@
 // https://man7.org/linux/man-pages/man2/listen.2.html
 
 #define ERROR_MESSAGE(code) (std::string(__FUNCTION__) + ", " + strerror(code))
-#define LISTEN_BACKLOG 50
+#define LISTEN_BACKLOG 50 
 
 class Config
 {
@@ -109,18 +109,46 @@ void Signal(int signum, sighandler_t handler)
     }
 }
 
+int Fcntl(int fd, int cmd, int flags)
+{
+    flags = fcntl(fd, cmd, flags);
+    if (flags == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+    return flags;
+}
+
 void SetNonBlocking(int fd)
 {
-    int flags  = fcntl(fd, F_GETFL, -1 );
+    int flags  = Fcntl(fd, F_GETFL, -1);
     flags |= O_NONBLOCK;
-    flags = fcntl(fd, F_SETFL, flags);
+    Fcntl(fd, F_SETFL, flags);
 }
 
 void SetBlocking(int fd)
 {
-    int flags  = fcntl(fd, F_GETFL, -1 );
+    int flags  = Fcntl(fd, F_GETFL, -1);
     flags &= ~O_NONBLOCK;
-    flags = fcntl(fd, F_SETFL, flags);
+    Fcntl(fd, F_SETFL, flags);
+}
+
+void Setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
+{
+    if (setsockopt(sockfd, level, optname, optval, optlen) == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+}
+
+void SetSocketReceiveBufferSize(int fd, int bufferSize)
+{
+    setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize));
+}
+
+void SetSocketSendBufferSize(int fd, int bufferSize)
+{
+    setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSize, sizeof(bufferSize));
 }
 
 int Socket(int domain, int type, int protocol)
@@ -187,9 +215,9 @@ int Accept(int fd)
     return connFd;
 }
 
-std::string Read(int fd, bool& peerClosed)
+std::string Read(int fd, bool& readStop)
 {
-    peerClosed = false;
+    readStop = false;
     std::string s{};
     const size_t bufSize = 1000;
     std::vector<char> buf(bufSize + 1, 0);
@@ -206,7 +234,7 @@ std::string Read(int fd, bool& peerClosed)
             buf[n] = 0;
             s += &buf[0];
         } else {
-            peerClosed = true;
+            readStop = true;
             break;
         }
     }
@@ -215,8 +243,8 @@ std::string Read(int fd, bool& peerClosed)
 
 std::string Read(int fd)
 {
-    bool peerClosed = false;
-    return Read(fd, peerClosed);
+    bool readStop = false;
+    return Read(fd, readStop);
 }
 
 std::string Write(int fd, std::string s)
@@ -253,6 +281,24 @@ void Shutdown(int sockfd, int how)
     }
 }
 
+inline void ShutdownRead(int fd)
+{
+    std::cout << "SHUT_RD" << std::endl;
+    Shutdown(fd, SHUT_RD);
+}
+
+inline void ShutdownWrite(int fd)
+{
+    std::cout << "SHUT_WR" << std::endl;
+    Shutdown(fd, SHUT_WR);
+}
+
+inline void ShutdownBoth(int fd)
+{
+    std::cout << "SHUT_RDWR" << std::endl;
+    Shutdown(fd, SHUT_RDWR);
+}
+
 #ifdef USE_POLL
 
 int Poll(struct pollfd *fds, nfds_t nfds, int timeout)
@@ -278,48 +324,57 @@ void Process(int fd, const Config& config)
     fds[1].fd = fd;
     fds[1].events = POLLIN | POLLOUT;
 
+    bool writeShutdown = false;
+    if (!config.read) {
+        ShutdownRead(fd);
+        fds[1].events &= ~POLLIN;
+    }
+    if (!config.write) {
+        ShutdownWrite(fd);
+        fds[1].events &= ~POLLOUT;
+        writeShutdown = true;
+    }
+
     std::string w{};
 
     for (;;) {
         Poll(&fds[0], fds.size(), -1);
 
-        if (fds[1].revents & POLLIN && config.read) {
-            bool fdClosed = false;
-            std::string s = Read(fd, fdClosed);
+        if (fds[1].revents & POLLIN) {  // this event could be reported even after shutdown read
+            bool readStop = false;
+            std::string s = Read(fd, readStop);
             if (!s.empty()) {
                 std::cout << s;
                 std::cout.flush();
             }
-            if (fdClosed) {
+            if (readStop) {
                 fds[1].events &= ~POLLIN;
+                std::cout << "read stop" << std::endl;
             }
         }
 
         if (fds[0].revents & POLLIN) {
             std::string r = Read(STDIN_FILENO);
             if (r == "exit\n") {
-                SetBlocking(STDIN_FILENO);
                 break;
             } else if (r == "shutdown read\n") {
-                std::cout << "SHUT_RD" << std::endl;
-                Shutdown(fd, SHUT_RD);
-                continue;
+                ShutdownRead(fd);
             } else if (r == "shutdown write\n") {
-                std::cout << "SHUT_WR" << std::endl;
-                Shutdown(fd, SHUT_WR);
-                continue;
+                ShutdownWrite(fd);
+                writeShutdown = true;
             } else if (r == "shutdown both\n") {
-                std::cout << "SHUT_RDWR" << std::endl;
-                Shutdown(fd, SHUT_RDWR);
-                continue;
-            }
-
-            if (config.write) {
+                ShutdownBoth(fd);
+                writeShutdown = true;
+            } else if (r == "unwritten length\n") {
+                std::cout << w.length() << std::endl;
+            } else if (writeShutdown) {
+                std::cout << "write is shutdown" << std::endl;
+            } else {
                 w += r;
             }
         }
 
-        if (fds[1].revents & POLLOUT || !w.empty()) {
+        if (fds[1].revents & POLLOUT) {  // this event could be reported even after shotdown write
             w = Write(fd, w);
         }
 
@@ -329,6 +384,7 @@ void Process(int fd, const Config& config)
             fds[1].events &= ~POLLOUT;
         }
     }
+    SetBlocking(STDIN_FILENO);
 }
 
 # else
@@ -357,60 +413,71 @@ void Process(int fd, const Config& config)
     fd_set wSet;
     FD_ZERO(&wSet);
 
-    bool fdClosed = false;
+    bool readStop = false;
+
+    bool writeShutdown = false;
+    if (!config.read) {
+        ShutdownRead(fd);
+        FD_CLR(STDIN_FILENO, &rSet);
+    }
+    if (!config.write) {
+        ShutdownWrite(fd);
+        writeShutdown = true;
+    }
     std::string w{};
 
     for (;;) {
         Select(fd + 1, &rSet, &wSet, NULL, NULL);
 
-        if (FD_ISSET(fd, &rSet) && config.read) {
-            std::string s = Read(fd, fdClosed);
+        if (FD_ISSET(fd, &rSet)) {  // this event could be reported even after shutdown read
+            std::string s = Read(fd, readStop);
             if (!s.empty()) {
                 std::cout << s;
                 std::cout.flush();
             }
-            if (fdClosed) {
+            if (readStop) {
                 FD_CLR(fd, &rSet);
+                std::cout << "read stop" << std::endl;
             }
         }
-        if (!fdClosed) {
+        if (!readStop) {
             FD_SET(fd, &rSet);
         }
 
         if (FD_ISSET(STDIN_FILENO, &rSet)) {
             std::string r = Read(STDIN_FILENO);
             if (r == "exit\n") {
-                SetBlocking(STDIN_FILENO);
                 break;
             } else if (r == "shutdown read\n") {
-                std::cout << "SHUT_RD" << std::endl;
-                Shutdown(fd, SHUT_RD);
-                continue;
+                ShutdownRead(fd);
             } else if (r == "shutdown write\n") {
-                std::cout << "SHUT_WR" << std::endl;
-                Shutdown(fd, SHUT_WR);
-                continue;
+                ShutdownWrite(fd);
+                writeShutdown = true;
             } else if (r == "shutdown both\n") {
-                std::cout << "SHUT_RDWR" << std::endl;
-                Shutdown(fd, SHUT_RDWR);
-                continue;
-            }
-
-            if (config.write) {
+                ShutdownBoth(fd);
+                writeShutdown = true;
+            } else if (r == "unwritten length\n") {
+                std::cout << w.length() << std::endl;
+            } else if (writeShutdown) {
+                std::cout << "write is shutdown" << std::endl;
+            } else {
                 w += r;
             }
         } else {
             FD_SET(STDIN_FILENO, &rSet);
         }
 
-        if (FD_ISSET(fd, &wSet) || !w.empty()) {
+        if (FD_ISSET(fd, &wSet)) {  // this event could be reported even after shotdown write
             w = Write(fd, w);
         }
 
         if (!w.empty()) {
             FD_SET(fd, &wSet);
+        } else {
+            FD_CLR(fd, &wSet);
         }
     }
+    SetBlocking(STDIN_FILENO);
 }
 
 #endif
@@ -430,6 +497,8 @@ void TypeEToExit()
 void Run(const Config& config)
 {
     int fd = Socket(AF_INET, SOCK_STREAM, 0);
+    SetSocketReceiveBufferSize(fd, 1152);  // socket(7) - The minimum (doubled) value for this option is 256?
+    SetSocketSendBufferSize(fd, 2304);  // socket(7) - The minimum (doubled) value for this option is 2048?.
 
     if (config.bind) {
         Bind(fd, config.srcAddr, config.srcPort);
