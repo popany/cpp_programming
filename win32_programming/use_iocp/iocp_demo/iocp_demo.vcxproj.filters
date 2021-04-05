@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\log">
+      <UniqueIdentifier>{4460d940-1744-426e-8ddd-f0e123358038}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\log\include">
+      <UniqueIdentifier>{0c838b36-e32c-4eeb-b1b5-0b691636c54d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\socket">
+      <UniqueIdentifier>{7bed7bd7-8fd9-4072-bdc0-dbea21adb8cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\socket\include">
+      <UniqueIdentifier>{f49149ce-5c80-453e-8aac-ac05e205bfdf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\iocp">
+      <UniqueIdentifier>{fb4f87c0-7cb1-4122-915a-92aa31d228bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\iocp\include">
+      <UniqueIdentifier>{36d94e7f-dfd7-4868-947d-662648e93581}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="log.cpp">
+      <Filter>Source Files\log</Filter>
+    </ClCompile>
+    <ClCompile Include="iocp.cpp">
+      <Filter>Source Files\iocp</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="log.h">
+      <Filter>Source Files\log\include</Filter>
+    </ClInclude>
+    <ClInclude Include="socket.h">
+      <Filter>Source Files\socket\include</Filter>
+    </ClInclude>
+    <ClInclude Include="iocp.h">
+      <Filter>Source Files\iocp\include</Filter>
+    </ClInclude>
+    <ClInclude Include="client_context.h">
+      <Filter>Source Files\iocp</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

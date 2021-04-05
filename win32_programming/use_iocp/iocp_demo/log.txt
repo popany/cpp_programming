@@ -1,0 +1,1 @@
+[Error][main] exception: WSAStartup failed with error: 0
