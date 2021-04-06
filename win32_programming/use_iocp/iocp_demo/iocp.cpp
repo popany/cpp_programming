@@ -1,7 +1,7 @@
+#include "socket.h"
 #include <windows.h>
 #include <stdexcept>
 #include <string>
-#include "socket.h"
 #include "log.h"
 #include "iocp.h"
 #include "client_context.h"
@@ -114,14 +114,14 @@ IOCP::IOCP() :
     acceptEvent(WSA_INVALID_EVENT)
 {}
 
-std::shared_ptr<ClientContext> IOCP::createClientContext()
+std::shared_ptr<ClientContext> IOCP::createClientContext(SOCKET socket)
 {
     static uint32_t id = 0;
     std::lock_guard<std::mutex> lock(clientContextsLock);
     while (clientContexts.count(id) || id == INVALID_CLIENT_CONTEXT_ID) {
         id++;
     }
-    auto clientContext = std::make_shared<ClientContext>(id);
+    auto clientContext = std::make_shared<ClientContext>(id, socket);
     clientContexts[id] = clientContext;
     return clientContext;
 }
@@ -130,7 +130,7 @@ void IOCP::removeClientContext(uint32_t id)
 {
     std::lock_guard<std::mutex> lock(clientContextsLock);
     if (!clientContexts.count(id)) {
-        LogError("ClientContext id(", clientCount->id, ") not exist");
+        LogError("ClientContext id(", id, ") not exist");
         return;
     }
     clientContexts.erase(id);
@@ -140,7 +140,7 @@ std::shared_ptr<ClientContext> IOCP::getClientContext(uint32_t id)
 {
     std::lock_guard<std::mutex> lock(clientContextsLock);
     if (!clientContexts.count(id)) {
-        LogError("ClientContext id(", clientCount->id, ") not exist");
+        LogError("ClientContext id(", id, ") not exist");
         return nullptr;
     }
     return clientContexts[id];
@@ -177,13 +177,13 @@ void IOCP::acceptConnection()
         LogError("accept failed, code(", code, ")");
         return;
     }
-    std::shared_ptr<ClientContext> clientContext = createClientContext();
-    clientContext->socket = socket;
+    std::shared_ptr<ClientContext> clientContext = createClientContext(socket);
     if (associateWithIOCP(clientContext)) {
         DWORD numberOfbytes = 0;
         DWORD flags = 0;
-        clientContext->wsaBuf.buf = &(clientContext->recvBuffer[0]);
-        clientContext->wsaBuf.len = clientContext->recvBuffer.size();
+        clientContext->wsaBuf.buf = &(clientContext->buffer[0]);
+        clientContext->wsaBuf.len = clientContext->buffer.size();
+        clientContext->setLastOptionRecv();
         //---------------------------------------------------------------------------------------------------------------------------------------------------
         // WSARecv
         // https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecv
@@ -253,7 +253,6 @@ void IOCP::acceptConnection()
                 return;
             }
         }
-        clientContext->setLastOptionRecv();
     }
 }
 
@@ -307,11 +306,11 @@ void IOCP::createAcceptThread()
                 LogError("WSAEnumNetworkEvents() failed, code(", code, ")");
                 continue;
             }
-            if (0 == wsaEvents.iErrorCode[FD_ACCEPT_BIT]) {
-                LogError("FD_ACCEPT failed, code(", code, ")");
-                continue;
-            }
 			if (wsaEvents.lNetworkEvents & FD_ACCEPT) {
+				if (0 != wsaEvents.iErrorCode[FD_ACCEPT_BIT]) {
+					LogError("FD_ACCEPT failed");
+					continue;
+				}
 				acceptConnection();
 			}
         }
@@ -321,8 +320,11 @@ void IOCP::createAcceptThread()
 void IOCP::process()
 {
     DWORD numberOfBytes = 0;
+	DWORD flags = 0;
     DWORD key = 0;
     OVERLAPPED *overlapped = NULL;
+    WSABUF buffRecv;
+    WSABUF buffSend;
     // GetQueuedCompletionStatus
     // https://docs.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getqueuedcompletionstatus
     // Parameters
@@ -365,10 +367,60 @@ void IOCP::process()
         return;
     }
     if (clientContext->isLastOptionRecv()) {
-        ;
+		// A recv operation has completed, post a send operation to echo the
+		// data back to the client using the same data buffer.
+        clientContext->setLastOptionSend();
+        clientContext->numberOfBytesToSend = numberOfBytes;
+        clientContext->numberOfBytesSent = 0;
+        clientContext->wsaBuf.len = numberOfBytes;
+        flags = 0;
+        int r = WSASend(clientContext->socket, &(clientContext->wsaBuf), 1, &numberOfBytes, flags, &(clientContext->overlapped), NULL);
+        if (r == SOCKET_ERROR) {
+            int code = WSAGetLastError();
+            if (code != WSA_IO_PENDING) {
+                LogError("WSASend() failed, code(", code, ")");
+                removeClientContext(clientContext->id);
+                return;
+            }
+        }
     }
     else if (clientContext->isLastOptionSend()) {
-        ;
+		// A send operation has completed, determine if all the data intended to be sent actually was sent.
+        clientContext->numberOfBytesSent += numberOfBytes;
+        if (clientContext->numberOfBytesSent < clientContext->numberOfBytesToSend) {
+            // The previous send operation didn't send all the data,
+            // post another send to complete the operation
+            clientContext->setLastOptionSend();
+            buffSend.buf = &(clientContext->buffer[0]) + clientContext->numberOfBytesSent;
+            buffSend.len = clientContext->numberOfBytesToSend - clientContext->numberOfBytesSent;
+            flags = 0;
+            int r = WSASend(clientContext->socket, &buffSend, 1, &numberOfBytes, flags, &(clientContext->overlapped), NULL);
+            if (r == SOCKET_ERROR) {
+                int code = WSAGetLastError();
+                if (code != WSA_IO_PENDING) {
+                    LogError("WSASend() failed, code(", code, ")");
+                    removeClientContext(clientContext->id);
+                    return;
+                }
+            }
+        }
+        else {
+            // Previous send operation completed for this socket, post another recv
+            clientContext->setLastOptionRecv();
+            numberOfBytes = 0;
+            flags = 0;
+            buffRecv.buf = &(clientContext->buffer[0]);
+			buffRecv.len = clientContext->buffer.size();
+            int r = WSARecv(clientContext->socket, &buffRecv, 1, &numberOfBytes, &flags, &(clientContext->overlapped), NULL);
+            if (r == SOCKET_ERROR) {
+                int code = WSAGetLastError();
+                if (code != WSA_IO_PENDING) {
+                    LogError("WSASend() failed, code(", code, ")");
+                    removeClientContext(clientContext->id);
+                    return;
+                }
+            }
+        }
     }
 }
 
@@ -401,16 +453,36 @@ void IOCP::start(int port, int concurrentNumber, int threadPoolSize)
     }
 }
 
+void IOCP::stopThreadPool()
+{
+    for (size_t i = 0; i < threadPool.size(); i++) {
+        // Help threads get out of blocking - GetQueuedCompletionStatus()
+        DWORD key = INVALID_CLIENT_CONTEXT_ID;
+		if (0 == PostQueuedCompletionStatus(iocp, 0, key, NULL)) {
+			DWORD code = GetLastError();
+			LogError("PostQueuedCompletionStatus() failed, code(", code, ")");
+        }
+    }
+    for (auto t : threadPool) {
+        t->join();
+    }
+}
+
 void IOCP::stop()
 {
     stopped = true;
     acceptThread.join();
-    for (auto t : threadPool) {
-        t->join();
-    }
-    CloseIOCP(iocp);
-    CloseSocket(listenSocket);
+    stopThreadPool();
+
     CloseAcceptEvent(acceptEvent);
+    CloseSocket(listenSocket);
+    CloseIOCP(iocp);
 }
 
+
+IOCP& IOCP::getInstance()
+{
+	static IOCP instance;
+	return instance;
+}
 

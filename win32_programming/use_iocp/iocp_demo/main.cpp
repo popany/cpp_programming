@@ -9,14 +9,31 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <thread>
+#include <chrono>
 
 #include "socket.h"
 #include "log.h"
+#include "iocp.h"
 
 int main()
 {
     try {
         InitWinsock();
+
+        auto t = std::thread([]() { IOCP::getInstance().start(10001, 4, 5); });
+
+        while (true) {
+            std::string s;
+            std::cin >> s;
+            if (s == "exit") {
+                break;
+            }
+        }
+        
+        IOCP::getInstance().stop();
+
+        t.join();
 		return 0;
     }
     catch (const std::exception& e) {

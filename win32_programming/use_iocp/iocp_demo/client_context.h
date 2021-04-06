@@ -22,18 +22,18 @@ class ClientContext
 public:
 	uint32_t id;
 	SOCKET socket;
+
 	OVERLAPPED overlapped;
+
 	WSABUF wsaBuf;
-	std::vector<char> sendBuffer;
-	std::vector<char> recvBuffer;
+	std::vector<char> buffer;
 	uint32_t numberOfBytesToSend;
 	uint32_t numberOfBytesSent;
 
 	ClientContext(uint32_t id, SOCKET socket) :
 		id(id),
 		socket(socket),
-		sendBuffer(BUFFER_SIZE, 0),
-		recvBuffer(BUFFER_SIZE, 0),
+		buffer(BUFFER_SIZE, 0),
 		lastOption(OPTION_NONE),
 		numberOfBytesSent(0),
 		numberOfBytesToSend(0)

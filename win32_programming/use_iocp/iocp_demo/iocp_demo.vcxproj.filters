@@ -42,6 +42,9 @@
     <ClCompile Include="iocp.cpp">
       <Filter>Source Files\iocp</Filter>
     </ClCompile>
+    <ClCompile Include="socket.cpp">
+      <Filter>Source Files\socket</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
