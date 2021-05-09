@@ -1,7 +1,7 @@
 OBJ_NAME = main.o foo.o bar.o
 APP_NAME = demo_app
 
-# --------------------------------------------------------------------------
+#############################################################################
 # BEGIN - Auto-Dependency Generation
 # http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/
 OBJDIR := obj
@@ -21,7 +21,7 @@ DEPFILES := $(OBJ_NAME:%.o=$(DEPDIR)/%.d)
 $(DEPFILES):
 include $(wildcard $(DEPFILES))
 # END - Auto-Dependency Generation
-# --------------------------------------------------------------------------
+#############################################################################
 
 STD = -std=c++11
 WARN = -Wall
@@ -33,7 +33,7 @@ CC = g++
 LD = $(CC) $(DEBUG)
 
 all: $(APP_NAME)
-	@echo "build " $(APP_NAME)
+	@echo build $(APP_NAME)
 
 .PHONY: all
 
