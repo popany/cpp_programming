@@ -41,3 +41,10 @@ OBJ = $(OBJ_NAME:%=$(OBJDIR)/%)
 $(APP_NAME): $(OBJ)
 	$(LD) -o $@ $^
 
+clean:
+	rm -f $(APP_NAME)
+	rm -f $(OBJ)
+	rm -f $(DEPFILES)
+
+.PHONY: clean
+
