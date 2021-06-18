@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+message ClientWords {
+    string timestamp = 1;
+    string content = 2;
+}
+
+message ServerWords {
+    string timestamp = 1;
+    string content = 2;
+}
+
+service ChatService {
+    rpc greet(ClientWords) returns (ServerWords) {}
+    rpc listen(ClientWords) returns (stream ServerWords) {}
+    rpc speak(stream ClientWords) returns (ServerWords) {}
+    rpc talk(stream ClientWords) returns (stream ServerWords) {}
+}
