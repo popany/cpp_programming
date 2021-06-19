@@ -13,20 +13,20 @@ void InitLogger()
 	spdlog::set_default_logger(combined_logger);
 }
 
-void SetLogLevel(LOG_LEVEL logLevel)
+void SetLogLevel(LogLevel logLevel)
 {
     switch (logLevel) {
-        case DEBUG:
+        case LogLevel::DEBUG:
             spdlog::set_level(spdlog::level::debug);
             break;
-        case INFO:
+        case LogLevel::INFO:
             spdlog::set_level(spdlog::level::info);
             break;
-        case WARN:
+        case LogLevel::WARN:
             spdlog::set_level(spdlog::level::warn);
             break;
-        case ERROR:
-            spdlog::set_level(spdlog::level::error);
+        case LogLevel::ERROR:
+            spdlog::set_level(spdlog::level::err);
             break;
         default:
             spdlog::set_level(spdlog::level::info);

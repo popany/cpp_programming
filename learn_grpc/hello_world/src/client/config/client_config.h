@@ -14,49 +14,49 @@
     }\
     void set_##item(const std::string& k, const std::string& v)\
     {\
-        if (k != name) {\
+        if (k != item) {\
             return;\
         }\
         _##item = parser(v);\
     }\
     public:\
-    const type& _##item() const\
+    const type& GET_##item() const\
     {\
         return _##item;\
     }\
     private:
 
 #define INIT_CONFIG(item) do {\
-        init_##item();
+        init_##item();\
     } while (0)
 
 #define SET_CONFIG(item,k,v) do {\
-        set_##item(k, v);
+        set_##item(k, v);\
     } while (0)
 
-#define CONFIG config.getInstance()
+#define CLIENT_CONFIG ClientConfig.getInstance()
 
-class Config
+class ClientConfig
 {
-    LOG_LEVEL parseLogLevel(std::string logLevel)
+    LogLevel parseLogLevel(std::string logLevel)
     {
         if (logLevel == "DEBUG") {
-            return LOG_LEVEL::DEBUG;
+            return LogLevel::DEBUG;
         }
         if (logLevel == "INFO") {
-            return LOG_LEVEL::INFO;
+            return LogLevel::INFO;
         }
         if (logLevel == "WARN") {
-            return LOG_LEVEL::WARN;
+            return LogLevel::WARN;
         }
         if (logLevel == "ERROR") {
-            return LOG_LEVEL::ERROR;
+            return LogLevel::ERROR;
         }
-        return LOG_LEVEL::INFO;
+        return LogLevel::INFO;
     }
 
     DEFINE_CONFIG_ITEM(LOG_LEVEL, std::string, parseLogLevel, "INFO");
-    DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, std::string, std::stoi, 50051);
+    DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, std::string, std::stoi, "50051");
 
     void initConfig()
     {
@@ -64,17 +64,24 @@ class Config
         INIT_CONFIG(GRPC_SERVER_PORT);
     }
 
-    void setConfig(const std::string& k, const std::string& v)
+    void setConfig(const std::string& name, const std::string& value)
     {
-        SET_CONFIG(LOG_LEVEL);
-        SET_CONFIG(GRPC_SERVER_PORT);
+        SET_CONFIG(LOG_LEVEL, name, value);
+        SET_CONFIG(GRPC_SERVER_PORT, name, value);
     }
 
     void loadConfigFile();
-    Config()
+    ClientConfig();
 public:
-    Config(const Config&) = delete;
-    void operator=(const Config&) = delete;
+    ClientConfig(const ClientConfig&) = delete;
+    void operator=(const ClientConfig&) = delete;
 
-    static Config& getInstance();
+    static ClientConfig& getInstance();
 };
+
+#undef LOG_LEVEL
+#undef GRPC_SERVER_PORT
+#undef DEFINE_CONFIG_ITEM
+#undef INIT_CONFIG
+#undef SET_CONFIG
+#undef SERVER_CONFIG

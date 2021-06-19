@@ -1,26 +1,29 @@
-#include "config.h"
+#include "client_config.h"
+#include <fstream>
+#include <boost/algorithm/string.hpp>
+#include "logger.h"
 
-#define CONFIG_FILE_NAME "hello_word.config"
+static const std::string CLIENT_CONFIG_FILE_NAME = "client.config";
+static const char COMMENT_PREFIX = '#';
 
-Config::Config():
-    logLevel(LOG_LEVEL::INFO)
-{}
-
-Config& Config::getInstance()
+ClientConfig::ClientConfig()
 {
-    static Config config;
-    static int initConfig = (config.loadConfigFile()), 1);
-    return config;
+    initConfig();
+}
+
+ClientConfig& ClientConfig::getInstance()
+{
+    static ClientConfig clientConfig;
+    static int initConfig = (clientConfig.loadConfigFile(), 1);
+    return clientConfig;
 };
 
-void Config::loadConfigFile()
+void ClientConfig::loadConfigFile()
 {
     try {
-        std::string fileName = CONFIG_FILE_NAME;
-
-        std::fstream s(CONFIG_FILE_NAME, std::fstream::in);
+        std::fstream s(CLIENT_CONFIG_FILE_NAME, std::fstream::in);
         if (!s.is_open()) {
-            LOG_DEBUG("failed to open config file \"{}\"", CONFIG_FILE_NAME);
+            LOG_DEBUG("failed to open client config file \"{}\"", CLIENT_CONFIG_FILE_NAME);
             return;
         }
 

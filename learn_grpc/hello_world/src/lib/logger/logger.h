@@ -11,7 +11,7 @@
 #define LOG_WARN(...) SPDLOG_WARN(__VA_ARGS__)
 #define LOG_ERROR(...) SPDLOG_ERROR(__VA_ARGS__)
 
-enum LOG_LEVEL
+enum LogLevel 
 {
     DEBUG = 1,
     INFO = 2,
@@ -20,4 +20,4 @@ enum LOG_LEVEL
 };
 
 void InitLogger();
-void SetLogLevel(LOG_LEVEL);
+void SetLogLevel(LogLevel);
