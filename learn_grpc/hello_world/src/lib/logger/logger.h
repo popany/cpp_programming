@@ -19,5 +19,22 @@ enum LogLevel
     ERROR = 4,
 };
 
+inline LogLevel parseLogLevel(std::string logLevel)
+{
+    if (logLevel == "DEBUG") {
+        return LogLevel::DEBUG;
+    }
+    if (logLevel == "INFO") {
+        return LogLevel::INFO;
+    }
+    if (logLevel == "WARN") {
+        return LogLevel::WARN;
+    }
+    if (logLevel == "ERROR") {
+        return LogLevel::ERROR;
+    }
+    return LogLevel::INFO;
+}
+
 void InitLogger();
 void SetLogLevel(LogLevel);

@@ -1,5 +1,3 @@
-add_subdirectory(config)
-
 set(client_srcs
     main.cpp)
 
@@ -8,7 +6,7 @@ add_executable(client
 
 target_link_libraries(client
     logger
-    client_config)
+    abstract_config)
 
 install(TARGETS client
     RUNTIME

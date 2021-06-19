@@ -1,29 +1,16 @@
-#include "client_config.h"
+#include "abstract_config.h"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include "logger.h"
 
-static const std::string CLIENT_CONFIG_FILE_NAME = "client.config";
 static const char COMMENT_PREFIX = '#';
 
-ClientConfig::ClientConfig()
-{
-    initConfig();
-}
-
-ClientConfig& ClientConfig::getInstance()
-{
-    static ClientConfig clientConfig;
-    static int initConfig = (clientConfig.loadConfigFile(), 1);
-    return clientConfig;
-};
-
-void ClientConfig::loadConfigFile()
+void AbstractConfig::loadConfigFile()
 {
     try {
-        std::fstream s(CLIENT_CONFIG_FILE_NAME, std::fstream::in);
+        std::fstream s(getConfigFileName(), std::fstream::in);
         if (!s.is_open()) {
-            LOG_DEBUG("failed to open client config file \"{}\"", CLIENT_CONFIG_FILE_NAME);
+            LOG_WARN("failed to open client config file \"{}\"", getConfigFileName());
             return;
         }
 
