@@ -1,2 +1,2 @@
 add_subdirectory(gtest)
-add_subdirectory(test_chat)
+add_subdirectory(test_all)

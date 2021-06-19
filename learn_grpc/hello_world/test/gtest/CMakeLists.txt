@@ -23,8 +23,7 @@ ExternalProject_Add(
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
-    LOG_BUILD ON
-)
+    LOG_BUILD ON)
 
 ExternalProject_Get_Property(googletest source_dir binary_dir)
 set(GTEST_HOME "${source_dir}/googletest" CACHE INTERNAL "") # used by mockcpp
@@ -42,25 +41,21 @@ add_dependencies(gtest googletest)
 set(GTEST_INCLUDE_DIRECTORY "${source_dir}/googletest/include")
 file(MAKE_DIRECTORY ${GTEST_INCLUDE_DIRECTORY})
 target_include_directories(gtest
-	INTERFACE
-		${GTEST_INCLUDE_DIRECTORY}
-)
+    INTERFACE
+        ${GTEST_INCLUDE_DIRECTORY})
 set(GTEST_LIB_FILE_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set_target_properties(gtest PROPERTIES
-	"IMPORTED_LOCATION" "${GTEST_OUTPUT_DIR}/${GTEST_LIB_FILE_NAME}"
-	"IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
+    "IMPORTED_LOCATION" "${GTEST_OUTPUT_DIR}/${GTEST_LIB_FILE_NAME}"
+    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
 
 add_library(gmock IMPORTED STATIC GLOBAL)
 add_dependencies(gmock googletest)
 set(GMOCK_INCLUDE_DIRECTORY "${source_dir}/googlemock/include")
 file(MAKE_DIRECTORY ${GMOCK_INCLUDE_DIRECTORY})
 target_include_directories(gmock
-	INTERFACE
-		${GMOCK_INCLUDE_DIRECTORY}
-)
+    INTERFACE
+        ${GMOCK_INCLUDE_DIRECTORY})
 set(GMOCK_LIB_FILE_NAME "${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set_target_properties(gmock PROPERTIES
-	"IMPORTED_LOCATION" "${GMOCK_OUTPUT_DIR}/${GMOCK_LIB_FILE_NAME}"
-	"IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
+    "IMPORTED_LOCATION" "${GMOCK_OUTPUT_DIR}/${GMOCK_LIB_FILE_NAME}"
+    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
