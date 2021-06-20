@@ -5,12 +5,19 @@
 
 static const char COMMENT_PREFIX = '#';
 
+void AbstractConfig::init(const std::string& configFilePath)
+{
+    this->configFilePath = configFilePath;
+    initConfig();
+    loadConfigFile();
+}
+
 void AbstractConfig::loadConfigFile()
 {
     try {
-        std::fstream s(getConfigFileName(), std::fstream::in);
+        std::fstream s(configFilePath, std::fstream::in);
         if (!s.is_open()) {
-            LOG_WARN("failed to open client config file \"{}\"", getConfigFileName());
+            LOG_WARN("failed to open client config file \"{}\"", configFilePath);
             return;
         }
 

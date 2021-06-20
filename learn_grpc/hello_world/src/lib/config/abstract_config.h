@@ -31,8 +31,10 @@
 
 class AbstractConfig
 {
+    std::string configFilePath;
 protected:
-    virtual const std::string& getConfigFileName() = 0;
+    virtual void initConfig() = 0;
     virtual void setConfig(const std::string& name, const std::string& value) = 0;
     void loadConfigFile();
+    void init(const std::string& configFilePath);
 };

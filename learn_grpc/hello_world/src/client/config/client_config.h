@@ -3,7 +3,7 @@
 #include "logger.h"
 #include "abstract_config.h"
 
-const std::string CLIENT_CONFIG_FILE_NAME = "client.config";
+const std::string DEFAULT_CLIENT_CONFIG_FILE_PATH = "./client.config";
 #define LOG_LEVEL "log.level"
 #define GRPC_SERVER_PORT "grpc.server.port"
 
@@ -12,7 +12,7 @@ class ClientConfig : public AbstractConfig
     DEFINE_CONFIG_ITEM(LOG_LEVEL, LogLevel, parseLogLevel, "INFO");
     DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, int, std::stoi, "50051");
 
-    void initConfig()
+    void initConfig() override
     {
         INIT_CONFIG(LOG_LEVEL);
         INIT_CONFIG(GRPC_SERVER_PORT);
@@ -26,11 +26,6 @@ class ClientConfig : public AbstractConfig
         SET_CONFIG(GRPC_SERVER_PORT, name, value);
     }
 
-    const std::string& getConfigFileName() override
-    {
-        return CLIENT_CONFIG_FILE_NAME;
-    }
-
     ClientConfig() {}
 public:
     ClientConfig(const ClientConfig&) = delete;
@@ -38,8 +33,7 @@ public:
 
     void init()
     {
-        initConfig();
-        loadConfigFile();
+        AbstractConfig::init(DEFAULT_CLIENT_CONFIG_FILE_PATH);
     }
 
     static ClientConfig& getInstance()
