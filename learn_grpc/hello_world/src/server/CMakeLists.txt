@@ -12,5 +12,5 @@ install(TARGETS server
     RUNTIME
     DESTINATION ${PROJECT_SOURCE_DIR}/bin)
 
-install(FILES ${PROJECT_SOURCE_DIR}/server.config
+install(FILES ${PROJECT_SOURCE_DIR}/config/server.config
     DESTINATION ${PROJECT_SOURCE_DIR}/bin)

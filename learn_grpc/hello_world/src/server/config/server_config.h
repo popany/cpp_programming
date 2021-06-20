@@ -10,7 +10,7 @@ const std::string SERVER_CONFIG_FILE_NAME = "server.config";
 class ServerConfig : public AbstractConfig
 {
     DEFINE_CONFIG_ITEM(LOG_LEVEL, LogLevel, parseLogLevel, "INFO");
-    DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, std::string, std::stoi, "50051");
+    DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, int, std::stoi, "50051");
 
     void initConfig()
     {
