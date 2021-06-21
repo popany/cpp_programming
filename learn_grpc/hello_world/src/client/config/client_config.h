@@ -5,16 +5,19 @@
 
 const std::string DEFAULT_CLIENT_CONFIG_FILE_PATH = "./client.config";
 #define LOG_LEVEL "log.level"
+#define GRPC_SERVER_HOST "grpc.server.host"
 #define GRPC_SERVER_PORT "grpc.server.port"
 
 class ClientConfig : public AbstractConfig
 {
     DEFINE_CONFIG_ITEM(LOG_LEVEL, LogLevel, parseLogLevel, "INFO");
+    DEFINE_CONFIG_ITEM(GRPC_SERVER_HOST, std::string, std::string, "localhost");
     DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, int, std::stoi, "50051");
 
     void initConfig() override
     {
         INIT_CONFIG(LOG_LEVEL);
+        INIT_CONFIG(GRPC_SERVER_HOST);
         INIT_CONFIG(GRPC_SERVER_PORT);
     }
 
@@ -23,6 +26,7 @@ class ClientConfig : public AbstractConfig
         if (SET_CONFIG(LOG_LEVEL, name, value)) {
             SetLogLevel(GET_LOG_LEVEL());
         }
+        SET_CONFIG(GRPC_SERVER_HOST, name, value);
         SET_CONFIG(GRPC_SERVER_PORT, name, value);
     }
 

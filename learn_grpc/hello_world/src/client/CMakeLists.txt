@@ -1,4 +1,5 @@
 set(client_srcs
+    client.cpp
     main.cpp)
 
 add_executable(client
