@@ -9,6 +9,7 @@ add_executable(client
 
 target_link_libraries(client
     logger
+    utils
     abstract_config
     grpc_protos)
 

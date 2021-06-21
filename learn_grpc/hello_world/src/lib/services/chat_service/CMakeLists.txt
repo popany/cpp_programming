@@ -6,6 +6,7 @@ add_library(chat_service
 
 target_link_libraries(chat_service
     logger
+    utils
     grpc_protos)
 
 target_include_directories(chat_service

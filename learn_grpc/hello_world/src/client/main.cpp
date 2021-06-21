@@ -2,6 +2,7 @@
 #include "config/client_config.h"
 #include "hello_client.h"
 #include "goodbye_client.h"
+#include "chat_client.h"
 #include <grpcpp/grpcpp.h>
 
 int main()
@@ -18,6 +19,9 @@ int main()
     GoodbyeClient goodbyeClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
     goodbyeClient.sayGoodbye();
     goodbyeClient.sayGoodbyeAgain();
+
+    ChatClient chatClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
+    chatClient.greet();
 
     return 0;
 }

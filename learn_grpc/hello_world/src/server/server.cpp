@@ -2,6 +2,7 @@
 #include <grpcpp/grpcpp.h>
 #include "hello_service.h"
 #include "goodbye_service.h"
+#include "chat_service.h"
 #include "logger.h"
 #include "config/server_config.h"
 
@@ -13,6 +14,11 @@ HelloService::Service& GetHelloService()
 GoodbyeService::Service& GetGoodbyeService()
 {
     return GoodbyeServiceImpl::getInstance();
+}
+
+ChatService::Service& GetChatService()
+{
+    return ChatServiceImpl::getInstance();
 }
 
 Server::Server()
@@ -32,6 +38,7 @@ void Server::start()
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&GetHelloService());
     builder.RegisterService(&GetGoodbyeService());
+    builder.RegisterService(&GetChatService());
     grpcServer = builder.BuildAndStart();
     grpcServer->Wait();
 }

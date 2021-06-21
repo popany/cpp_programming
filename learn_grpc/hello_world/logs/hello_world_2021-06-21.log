@@ -334,3 +334,56 @@ Again] firstname: Foo, lastname: Bar
 [2021-06-21 07:10:01.862][info][pid 2418][tid 2467][goodbye_service.cpp:21][sayGoodbyeAgain] firstname: Foo, lastname: Bar
 [2021-06-21 07:10:03.232][info][pid 2418][tid 2865][main.cpp:11][operator()] signal(2) received
 [2021-06-21 07:10:03.233][info][pid 2418][tid 2865][server.cpp:44][stop] Server stopped
+[2021-06-21 09:50:50.916][info][pid 26137][tid 26137][hello_client.cpp:24][sayHello] response: "Hello, Foo Bar"
+[2021-06-21 09:50:50.919][info][pid 26137][tid 26137][hello_client.cpp:44][sayHelloAgain] response: "Hello again, Foo Bar"
+[2021-06-21 09:50:50.923][info][pid 26137][tid 26137][goodbye_client.cpp:24][sayGoodbye] response: "Goodbye, Foo Bar"
+[2021-06-21 09:50:50.924][info][pid 26137][tid 26137][goodbye_client.cpp:44][sayGoodbyeAgain] response: "Goodbye again, Foo Bar"
+[2021-06-21 09:50:50.926][info][pid 26137][tid 26137][chat_client.cpp:25][greet] response: 2021-06-21 09:50:50.926438 - "Me too!"
+[2021-06-21 09:51:15.622][info][pid 26464][tid 26464][hello_client.cpp:24][sayHello] response: "Hello, Foo Bar"
+[2021-06-21 09:51:15.623][info][pid 26464][tid 26464][hello_client.cpp:44][sayHelloAgain] response: "Hello again, Foo Bar"
+[2021-06-21 09:51:15.627][info][pid 26464][tid 26464][goodbye_client.cpp:24][sayGoodbye] response: "Goodbye, Foo Bar"
+[2021-06-21 09:51:15.629][info][pid 26464][tid 26464][goodbye_client.cpp:44][sayGoodbyeAgain] response: "Goodbye again, Foo Bar"
+[2021-06-21 09:51:15.631][info][pid 26464][tid 26464][chat_client.cpp:25][greet] response: 2021-06-21 09:51:15.631277 - "Me too!"
+[2021-06-21 09:51:20.544][info][pid 26530][tid 26530][hello_client.cpp:24][sayHello] response: "Hello, Foo Bar"
+[2021-06-21 09:51:20.545][info][pid 26530][tid 26530][hello_client.cpp:44][sayHelloAgain] response: "Hello again, Foo Bar"
+[2021-06-21 09:51:20.549][info][pid 26530][tid 26530][goodbye_client.cpp:24][sayGoodbye] response: "Goodbye, Foo Bar"
+[2021-06-21 09:51:20.551][info][pid 26530][tid 26530][goodbye_client.cpp:44][sayGoodbyeAgain] response: "Goodbye again, Foo Bar"
+[2021-06-21 09:51:20.553][info][pid 26530][tid 26530][chat_client.cpp:25][greet] response: 2021-06-21 09:51:20.553536 - "Me too!"
+[2021-06-21 09:51:21.841][info][pid 26550][tid 26550][hello_client.cpp:24][sayHello] response: "Hello, Foo Bar"
+[2021-06-21 09:51:21.842][info][pid 26550][tid 26550][hello_client.cpp:44][sayHelloAgain] response: "Hello again, Foo Bar"
+[2021-06-21 09:51:21.844][info][pid 26550][tid 26550][goodbye_client.cpp:24][sayGoodbye] response: "Goodbye, Foo Bar"
+[2021-06-21 09:51:21.846][info][pid 26550][tid 26550][goodbye_client.cpp:44][sayGoodbyeAgain] response: "Goodbye again, Foo Bar"
+[2021-06-21 09:51:21.848][info][pid 26550][tid 26550][chat_client.cpp:25][greet] response: 2021-06-21 09:51:21.848048 - "Me too!"
+[2021-06-21 09:51:23.348][info][pid 26570][tid 26570][hello_client.cpp:24][sayHello] response: "Hello, Foo Bar"
+[2021-06-21 09:51:23.350][info][pid 26570][tid 26570][hello_client.cpp:44][sayHelloAgain] response: "Hello again, Foo Bar"
+[2021-06-21 09:51:23.353][info][pid 26570][tid 26570][goodbye_client.cpp:24][sayGoodbye] response: "Goodbye, Foo Bar"
+[2021-06-21 09:51:23.354][info][pid 26570][tid 26570][goodbye_client.cpp:44][sayGoodbyeAgain] response: "Goodbye again, Foo Bar"
+[2021-06-21 09:51:23.357][info][pid 26570][tid 26570][chat_client.cpp:25][greet] response: 2021-06-21 09:51:23.357110 - "Me too!"
+[2021-06-21 09:50:47.837][info][pid 26090][tid 26090][server.cpp:36][start] Server listening on 0.0.0.0:50051
+[2021-06-21 09:50:50.915][info][pid 26090][tid 26094][hello_service.cpp:14][sayHello] firstname: Foo, lastname: Bar
+[2021-06-21 09:50:50.918][info][pid 26090][tid 26094][hello_service.cpp:21][sayHelloAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:50:50.922][info][pid 26090][tid 26141][goodbye_service.cpp:14][sayGoodbye] firstname: Foo, lastname: Bar
+[2021-06-21 09:50:50.924][info][pid 26090][tid 26094][goodbye_service.cpp:21][sayGoodbyeAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:50:50.926][info][pid 26090][tid 26141][chat_service.cpp:15][greet] request: 2021-06-21 09:50:50.925236 - "Nice to meet you!"
+[2021-06-21 09:51:15.621][info][pid 26090][tid 26141][hello_service.cpp:14][sayHello] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:15.622][info][pid 26090][tid 26141][hello_service.cpp:21][sayHelloAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:15.626][info][pid 26090][tid 26094][goodbye_service.cpp:14][sayGoodbye] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:15.628][info][pid 26090][tid 26141][goodbye_service.cpp:21][sayGoodbyeAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:15.631][info][pid 26090][tid 26094][chat_service.cpp:15][greet] request: 2021-06-21 09:51:15.629879 - "Nice to meet you!"
+[2021-06-21 09:51:20.544][info][pid 26090][tid 26141][hello_service.cpp:14][sayHello] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:20.545][info][pid 26090][tid 26141][hello_service.cpp:21][sayHelloAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:20.549][info][pid 26090][tid 26094][goodbye_service.cpp:14][sayGoodbye] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:20.551][info][pid 26090][tid 26141][goodbye_service.cpp:21][sayGoodbyeAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:20.553][info][pid 26090][tid 26094][chat_service.cpp:15][greet] request: 2021-06-21 09:51:20.552120 - "Nice to meet you!"
+[2021-06-21 09:51:21.841][info][pid 26090][tid 26141][hello_service.cpp:14][sayHello] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:21.841][info][pid 26090][tid 26141][hello_service.cpp:21][sayHelloAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:21.844][info][pid 26090][tid 26094][goodbye_service.cpp:14][sayGoodbye] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:21.845][info][pid 26090][tid 26141][goodbye_service.cpp:21][sayGoodbyeAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:21.847][info][pid 26090][tid 26094][chat_service.cpp:15][greet] request: 2021-06-21 09:51:21.846801 - "Nice to meet you!"
+[2021-06-21 09:51:23.348][info][pid 26090][tid 26141][hello_service.cpp:14][sayHello] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:23.349][info][pid 26090][tid 26141][hello_service.cpp:21][sayHelloAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:23.353][info][pid 26090][tid 26094][goodbye_service.cpp:14][sayGoodbye] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:23.354][info][pid 26090][tid 26141][goodbye_service.cpp:21][sayGoodbyeAgain] firstname: Foo, lastname: Bar
+[2021-06-21 09:51:23.356][info][pid 26090][tid 26094][chat_service.cpp:15][greet] request: 2021-06-21 09:51:23.355309 - "Nice to meet you!"
+[2021-06-21 09:51:34.044][info][pid 26090][tid 26714][main.cpp:11][operator()] signal(15) received
+[2021-06-21 09:51:34.045][info][pid 26090][tid 26714][server.cpp:51][stop] Server stopped
