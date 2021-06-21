@@ -1,5 +1,7 @@
 set(client_srcs
-    client.cpp
+    chat_client.cpp
+    goodbye_client.cpp
+    hello_client.cpp
     main.cpp)
 
 add_executable(client

@@ -1,4 +1,4 @@
-#include "client.h"
+#include "hello_client.h"
 #include <grpcpp/grpcpp.h>
 #include "hello.grpc.pb.h"
 #include "logger.h"

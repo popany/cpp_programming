@@ -1,6 +1,7 @@
 #include "server.h"
 #include <grpcpp/grpcpp.h>
 #include "hello_service.h"
+#include "goodbye_service.h"
 #include "logger.h"
 #include "config/server_config.h"
 
@@ -9,9 +10,13 @@ HelloService::Service& GetHelloService()
     return HelloServiceImpl::getInstance();
 }
 
-Server::Server()
+GoodbyeService::Service& GetGoodbyeService()
 {
+    return GoodbyeServiceImpl::getInstance();
 }
+
+Server::Server()
+{}
 
 Server& Server::getInstance()
 {
@@ -26,6 +31,7 @@ void Server::start()
     grpc::ServerBuilder builder;
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&GetHelloService());
+    builder.RegisterService(&GetGoodbyeService());
     grpcServer = builder.BuildAndStart();
     grpcServer->Wait();
 }
