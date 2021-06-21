@@ -3,7 +3,8 @@
 
 int main()
 {
-    CLIENT_CONFIG.init();
+    InitLogger();
+    SetLogLevel(CLIENT_CONFIG.GET_LOG_LEVEL());
     LOG_INFO("iiii");
     LOG_DEBUG("dddd");
 

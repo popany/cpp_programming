@@ -7,7 +7,7 @@ add_executable(client
 target_link_libraries(client
     logger
     abstract_config
-    grpc_proto)
+    grpc_protos)
 
 install(TARGETS client
     RUNTIME

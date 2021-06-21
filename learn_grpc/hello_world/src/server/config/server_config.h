@@ -27,18 +27,20 @@ class ServerConfig : public AbstractConfig
     }
 
     ServerConfig() {}
-public:
-    ServerConfig(const ServerConfig&) = delete;
-    void operator=(const ServerConfig&) = delete;
 
     void init()
     {
         AbstractConfig::init(DEFAULT_SERVER_CONFIG_FILE_PATH);
     }
 
+public:
+    ServerConfig(const ServerConfig&) = delete;
+    void operator=(const ServerConfig&) = delete;
+
     static ServerConfig& getInstance()
     {
         static ServerConfig config;
+        static int _init = (config.init(), 0);
         return config;
     }
 };

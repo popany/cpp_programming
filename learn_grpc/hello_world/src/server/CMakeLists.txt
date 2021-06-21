@@ -1,4 +1,5 @@
 set(server_srcs
+    server.cpp
     main.cpp)
 
 add_executable(server
@@ -7,7 +8,9 @@ add_executable(server
 target_link_libraries(server
     logger
     abstract_config
-    grpc_service)
+    chat_service
+    goodbye_service
+    hello_service)
 
 install(TARGETS server
     RUNTIME

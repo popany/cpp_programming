@@ -27,18 +27,20 @@ class ClientConfig : public AbstractConfig
     }
 
     ClientConfig() {}
-public:
-    ClientConfig(const ClientConfig&) = delete;
-    void operator=(const ClientConfig&) = delete;
 
     void init()
     {
         AbstractConfig::init(DEFAULT_CLIENT_CONFIG_FILE_PATH);
     }
 
+public:
+    ClientConfig(const ClientConfig&) = delete;
+    void operator=(const ClientConfig&) = delete;
+
     static ClientConfig& getInstance()
     {
         static ClientConfig config;
+        static int _init = (config.init(), 0);
         return config;
     }
 };

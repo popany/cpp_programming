@@ -1,0 +1,20 @@
+[2021-06-21 03:08:31.153][info][pid 17500][tid 17500][server.cpp:25][start] Server listening on 0.0.0.0:50051
+[2021-06-21 03:08:33.331][info][pid 17500][tid 17512][main.cpp:11][operator()] signal(2) received
+[2021-06-21 03:08:33.332][info][pid 17500][tid 17512][server.cpp:38][stop] Server stopped
+[2021-06-21 03:08:49.501][info][pid 17891][tid 17891][server.cpp:25][start] Server listening on 0.0.0.0:50051
+[2021-06-21 03:08:53.083][info][pid 17891][tid 17982][main.cpp:11][operator()] signal(2) received
+[2021-06-21 03:08:53.084][info][pid 17891][tid 17982][server.cpp:38][stop] Server stopped
+[2021-06-21 03:22:05.568][info][pid 3098][tid 3098][server.cpp:25][start] Server listening on 0.0.0.0:50051
+[2021-06-21 03:22:07.857][info][pid 3098][tid 3169][main.cpp:11][operator()] signal(2) received
+[2021-06-21 03:22:07.858][info][pid 3098][tid 3169][server.cpp:38][stop] Server stopped
+[2021-06-21 03:22:22.385][debug][pid 3439][tid 3439][main.cpp:28][main] sssssssssssssssssss
+[2021-06-21 03:22:22.385][info][pid 3439][tid 3439][server.cpp:25][start] Server listening on 0.0.0.0:50051
+[2021-06-21 03:22:25.260][info][pid 3439][tid 3517][main.cpp:11][operator()] signal(2) received
+[2021-06-21 03:22:25.261][info][pid 3439][tid 3517][server.cpp:38][stop] Server stopped
+[2021-06-21 03:22:36.345][info][pid 3782][tid 3782][main.cpp:8][main] iiii
+[2021-06-21 03:22:36.346][info][pid 3782][tid 3782][main.cpp:11][main] log.level: 2
+[2021-06-21 03:22:36.346][info][pid 3782][tid 3782][main.cpp:12][main] grpc.server.port: 50051
+[2021-06-21 03:22:50.812][info][pid 4088][tid 4088][main.cpp:8][main] iiii
+[2021-06-21 03:22:50.812][debug][pid 4088][tid 4088][main.cpp:9][main] dddd
+[2021-06-21 03:22:50.812][info][pid 4088][tid 4088][main.cpp:11][main] log.level: 1
+[2021-06-21 03:22:50.813][info][pid 4088][tid 4088][main.cpp:12][main] grpc.server.port: 50051

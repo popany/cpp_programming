@@ -1,14 +1,32 @@
+#include "server.h"
 #include "logger.h"
 #include "config/server_config.h"
+#include <signal.h>
+#include <thread>
+
+void HandleSignal(int signum)
+{
+    if (signum == SIGINT || signum == SIGTERM) {
+        std::thread t([=]() {
+            LOG_INFO("signal({}) received", signum);
+            Server::getInstance().stop();
+        });
+        t.detach();
+    }
+}
+
+void RegisterSignalHandler()
+{
+    signal(SIGINT, HandleSignal);
+    signal(SIGTERM, HandleSignal);
+}
 
 int main()
 {
-    SERVER_CONFIG.init();
-    LOG_INFO("iiii");
-    LOG_DEBUG("dddd");
-
-    LOG_INFO("log.level: {}", SERVER_CONFIG.GET_LOG_LEVEL());
-    LOG_INFO("grpc.server.port: {}", SERVER_CONFIG.GET_GRPC_SERVER_PORT());
+    InitLogger();
+    SetLogLevel(SERVER_CONFIG.GET_LOG_LEVEL());
+    RegisterSignalHandler();
+    Server::getInstance().start();
 
     return 0;
 }

@@ -1,0 +1,3 @@
+add_subdirectory(chat_service)
+add_subdirectory(goodbye_service)
+add_subdirectory(hello_service)
