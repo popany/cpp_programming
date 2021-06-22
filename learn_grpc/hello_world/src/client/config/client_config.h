@@ -10,6 +10,8 @@ const std::string DEFAULT_CLIENT_CONFIG_FILE_PATH = "./client.config";
 #define GRPC_SERVER_PORT "grpc.server.port"
 #define GRPC_CLIENT_ASYNC "grpc.client.async"
 #define GRPC_CLIENT_ASYNC_REQUEST_COUNT "grpc.client.async.request.count"
+#define GRPC_CLIENT_ASYNC_THREADPOOL_SIZE "grpc.client.async.threadpool.size"
+#define GRPC_CLIENT_ASYNC_POLLING_INTERVAL_MILLISECONDS "grpc.client.async.polling.interval.milliseconds"
 
 class ClientConfig : public AbstractConfig
 {
@@ -18,6 +20,8 @@ class ClientConfig : public AbstractConfig
     DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, int, std::stoi, "50051");
     DEFINE_CONFIG_ITEM(GRPC_CLIENT_ASYNC, bool, utils::StringToBool, "false");
     DEFINE_CONFIG_ITEM(GRPC_CLIENT_ASYNC_REQUEST_COUNT, int, std::stoi, "3");
+    DEFINE_CONFIG_ITEM(GRPC_CLIENT_ASYNC_THREADPOOL_SIZE, int, std::stoi, "8");
+    DEFINE_CONFIG_ITEM(GRPC_CLIENT_ASYNC_POLLING_INTERVAL_MILLISECONDS, int, std::stoi, "500");
 
     void initConfig() override
     {
@@ -26,6 +30,8 @@ class ClientConfig : public AbstractConfig
         INIT_CONFIG(GRPC_SERVER_PORT);
         INIT_CONFIG(GRPC_CLIENT_ASYNC);
         INIT_CONFIG(GRPC_CLIENT_ASYNC_REQUEST_COUNT);
+        INIT_CONFIG(GRPC_CLIENT_ASYNC_THREADPOOL_SIZE);
+        INIT_CONFIG(GRPC_CLIENT_ASYNC_POLLING_INTERVAL_MILLISECONDS);
     }
 
     void setConfig(const std::string& name, const std::string& value)
@@ -37,6 +43,8 @@ class ClientConfig : public AbstractConfig
         SET_CONFIG(GRPC_SERVER_PORT, name, value);
         SET_CONFIG(GRPC_CLIENT_ASYNC, name, value);
         SET_CONFIG(GRPC_CLIENT_ASYNC_REQUEST_COUNT, name, value);
+        SET_CONFIG(GRPC_CLIENT_ASYNC_THREADPOOL_SIZE, name, value);
+        SET_CONFIG(GRPC_CLIENT_ASYNC_POLLING_INTERVAL_MILLISECONDS, name, value);
     }
 
     ClientConfig() {}

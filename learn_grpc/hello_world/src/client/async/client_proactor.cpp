@@ -1,56 +1,59 @@
-#include "abstract_async_client.h"
+#include "client_proactor.h"
 #include <thread>
 #include <chrono>
 #include "logger.h"
 #include "utils.h"
+#include "../config/client_config.h"
 
-AbstractAsyncClient::AbstractAsyncClient(int threadPoolSize):
+ClientProactor::ClientProactor(int threadPoolSize):
     threadPoolSize(threadPoolSize),
     threadPool(threadPoolSize)
 {}
 
-void AbstractAsyncClient::addToken(void* token, std::shared_ptr<AsyncCallResponseProcessor> processor)
+void ClientProactor::addToken(void* token, std::shared_ptr<AsyncCallResponseProcessor> processor)
 {
     std::lock_guard<std::mutex> lock(tokensLock);
     tokens.insert({ token, processor });
 }
 
-bool AbstractAsyncClient::isTokenExist(void* token)
+bool ClientProactor::isTokenExist(void* token)
 {
     std::lock_guard<std::mutex> lock(tokensLock);
     return tokens.count(token);
 }
 
-void AbstractAsyncClient::removeToken(void* token)
+void ClientProactor::removeToken(void* token)
 {
     std::lock_guard<std::mutex> lock(tokensLock);
     tokens.erase(token);
 }
 
-void AbstractAsyncClient::removeAllTokens()
+void ClientProactor::removeAllTokens()
 {
     std::lock_guard<std::mutex> lock(tokensLock);
     tokens.clear();
 }
 
-size_t AbstractAsyncClient::getTokenCount()
+size_t ClientProactor::getTokenCount()
 {
     std::lock_guard<std::mutex> lock(tokensLock);
     return tokens.size();
 }
 
-std::shared_ptr<AsyncCallResponseProcessor> AbstractAsyncClient::getProcesser(void* token)
+std::shared_ptr<AsyncCallResponseProcessor> ClientProactor::getProcesser(void* token)
 {
     std::lock_guard<std::mutex> lock(tokensLock);
     return tokens[token];
 }
 
-void AbstractAsyncClient::asyncCompleteRpc()
+void ClientProactor::asyncCompleteRpc()
 {
     void* token;
     bool ok = false;
     while (true) {
-        grpc::CompletionQueue::NextStatus nextStatus = cq.AsyncNext(&token, &ok, std::chrono::system_clock::now() + std::chrono::milliseconds(1000));
+        grpc::CompletionQueue::NextStatus nextStatus = cq.AsyncNext(&token, &ok,
+            std::chrono::system_clock::now() + std::chrono::milliseconds(CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_POLLING_INTERVAL_MILLISECONDS()));
+
         if (nextStatus == grpc::CompletionQueue::NextStatus::SHUTDOWN) {
             LOG_INFO("cq shutdown, remaining tokens count: {}", getTokenCount());
             removeAllTokens();
@@ -78,14 +81,20 @@ void AbstractAsyncClient::asyncCompleteRpc()
     }
 }
 
-void AbstractAsyncClient::startThreadPool()
+void ClientProactor::startThreadPool()
 {
     for (int i = 0; i < threadPoolSize; i++) {
-        boost::asio::post(threadPool, std::bind(&AbstractAsyncClient::asyncCompleteRpc, this));
+        boost::asio::post(threadPool, std::bind(&ClientProactor::asyncCompleteRpc, this));
     }
 }
 
-void AbstractAsyncClient::waitForComplete()
+void ClientProactor::waitForComplete()
 {
     threadPool.join();
+}
+
+ClientProactor& ClientProactor::getInstance()
+{
+    static ClientProactor instance(CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_THREADPOOL_SIZE());
+    return instance;
 }

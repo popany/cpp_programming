@@ -27,21 +27,21 @@ void UseSyncClient(const std::string& serverAddress)
 
 void UseAsyncClient(const std::string& serverAddress)
 {
+    ClientProactor::getInstance().startThreadPool();
+
     AsyncHelloClient helloClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
-    helloClient.startThreadPool();
     for (int i = 0; i < CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_REQUEST_COUNT(); i++) {
         helloClient.sayHello();
         helloClient.sayHelloAgain();
     }
-    helloClient.waitForComplete();
 
     AsyncGoodbyeClient goodbyeClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
-    goodbyeClient.startThreadPool();
     for (int i = 0; i < CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_REQUEST_COUNT(); i++) {
         goodbyeClient.sayGoodbye();
         goodbyeClient.sayGoodbyeAgain();
     }
-    goodbyeClient.waitForComplete();
+
+    ClientProactor::getInstance().waitForComplete();
 }
 
 int main()

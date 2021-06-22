@@ -2,9 +2,9 @@
 
 #include <grpcpp/grpcpp.h>
 #include "hello.grpc.pb.h"
-#include "abstract_async_client.h"
+#include "client_proactor.h"
 
-class AsyncHelloClient : public AbstractAsyncClient 
+class AsyncHelloClient
 {
     std::unique_ptr<HelloService::Stub> stub;
 
@@ -12,7 +12,7 @@ class AsyncHelloClient : public AbstractAsyncClient
     void processSayHelloAgainResponse(void* token);
 
 public:
-    AsyncHelloClient(std::shared_ptr<grpc::Channel> channel, int threadPoolSize = 8);
+    AsyncHelloClient(std::shared_ptr<grpc::Channel> channel);
     void sayHello();
     void sayHelloAgain();
 };

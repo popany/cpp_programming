@@ -12,7 +12,7 @@ public:
     virtual void process() = 0;
 };
 
-class AbstractAsyncClient
+class ClientProactor
 {
     grpc::CompletionQueue cq;
     int threadPoolSize;
@@ -28,7 +28,12 @@ class AbstractAsyncClient
     std::shared_ptr<AsyncCallResponseProcessor> getProcesser(void* token);
     void asyncCompleteRpc();
 
-protected:
+    ClientProactor(int threadPoolSize);
+public:
+    ClientProactor(const ClientProactor&) = delete;
+    void operator=(const ClientProactor&) = delete;
+
+    static ClientProactor& getInstance();
 
     template<class F>
     auto prepareAsyncCall(F prepare, std::shared_ptr<AsyncCallResponseProcessor> processor) 
@@ -38,8 +43,6 @@ protected:
         return prepare(&cq);
     }
 
-public:
-    AbstractAsyncClient(int threadPoolSize);
     void startThreadPool();
     void waitForComplete();
 };

@@ -52,8 +52,7 @@ public:
     }
 };
 
-AsyncGoodbyeClient::AsyncGoodbyeClient(std::shared_ptr<grpc::Channel> channel, int threadPoolSize) :
-    AbstractAsyncClient(threadPoolSize),
+AsyncGoodbyeClient::AsyncGoodbyeClient(std::shared_ptr<grpc::Channel> channel) :
     stub(GoodbyeService::NewStub(channel))
 {}
 
@@ -69,7 +68,7 @@ void AsyncGoodbyeClient::sayGoodbye()
     // an instance to store in "call" but does not actually start the RPC
     // Because we are using the asynchronous API, we need to hold on to
     // the "call" instance in order to get updates on the ongoing RPC.
-    call->responseReader = prepareAsyncCall(std::bind(&GoodbyeService::Stub::PrepareAsyncsayGoodbye, stub.get(), &call->context, request, std::placeholders::_1),
+    call->responseReader = ClientProactor::getInstance().prepareAsyncCall(std::bind(&GoodbyeService::Stub::PrepareAsyncsayGoodbye, stub.get(), &call->context, request, std::placeholders::_1),
         call);
 
     // StartCall initiates the RPC call
@@ -90,7 +89,7 @@ void AsyncGoodbyeClient::sayGoodbyeAgain()
 
     std::shared_ptr<SayGoodbyeAgainCall> call = std::make_shared<SayGoodbyeAgainCall>();
 
-    call->responseReader = prepareAsyncCall(std::bind(&GoodbyeService::Stub::PrepareAsyncsayGoodbyeAgain, stub.get(), &call->context, request, std::placeholders::_1),
+    call->responseReader = ClientProactor::getInstance().prepareAsyncCall(std::bind(&GoodbyeService::Stub::PrepareAsyncsayGoodbyeAgain, stub.get(), &call->context, request, std::placeholders::_1),
         call);
 
     // StartCall initiates the RPC call
