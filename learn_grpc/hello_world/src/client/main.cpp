@@ -22,6 +22,9 @@ int main()
 
     ChatClient chatClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
     chatClient.greet();
+    chatClient.listen();
+    chatClient.speak();
+    chatClient.talk();
 
     return 0;
 }

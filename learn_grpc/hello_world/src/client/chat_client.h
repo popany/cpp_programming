@@ -11,6 +11,6 @@ public:
     ChatClient(std::shared_ptr<grpc::Channel> channel);
     void greet();
     void listen();
-    void speek();
+    void speak();
     void talk();
 };
