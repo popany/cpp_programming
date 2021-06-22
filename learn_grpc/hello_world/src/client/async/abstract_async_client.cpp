@@ -7,13 +7,13 @@ AbstractAsyncClient::AbstractAsyncClient(int threadPoolSize):
     threadPool(threadPoolSize)
 {}
 
-void AbstractAsyncClient::addToken(void* token)
+void AbstractAsyncClient::addToken(void* token, std::shared_ptr<AsyncCallResponseProcessor> processor)
 {
     std::lock_guard<std::mutex> lock(tokensLock);
-    tokens.insert(token);
+    tokens.insert({ token, processor });
 }
 
-bool AbstractAsyncClient::tokenExist(void* token)
+bool AbstractAsyncClient::isTokenExist(void* token)
 {
     std::lock_guard<std::mutex> lock(tokensLock);
     return tokens.count(token);

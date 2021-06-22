@@ -15,5 +15,4 @@ public:
     AsyncHelloClient(std::shared_ptr<grpc::Channel> channel, int threadPoolSize = 8);
     void sayHello();
     void sayHelloAgain();
-    void asyncCompleteRpc() override;
 };
