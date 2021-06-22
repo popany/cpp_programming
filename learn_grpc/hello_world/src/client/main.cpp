@@ -44,6 +44,7 @@ void UseAsyncClient(const std::string& serverAddress)
     AsyncChatClient chatClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
     for (int i = 0; i < CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_REQUEST_COUNT(); i++) {
         chatClient.greet();
+        chatClient.listen();
     }
 
     ClientProactor::getInstance().waitForComplete();
