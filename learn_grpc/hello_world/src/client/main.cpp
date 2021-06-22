@@ -3,15 +3,13 @@
 #include "hello_client.h"
 #include "goodbye_client.h"
 #include "chat_client.h"
+#include "async_hello_client.h"
+#include "async_goodbye_client.h"
+#include "async_chat_client.h"
 #include <grpcpp/grpcpp.h>
 
-int main()
+void UseSyncClient(const std::string& serverAddress)
 {
-    InitLogger();
-    SetLogLevel(CLIENT_CONFIG.GET_LOG_LEVEL());
-
-    std::string serverAddress = std::string("0.0.0.0:") + std::to_string(CLIENT_CONFIG.GET_GRPC_SERVER_PORT());
-
     HelloClient helloClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
     helloClient.sayHello();
     helloClient.sayHelloAgain();
@@ -25,6 +23,29 @@ int main()
     chatClient.listen();
     chatClient.speak();
     chatClient.talk();
+}
+
+void UseAsyncClient(const std::string& serverAddress)
+{
+    AsyncHelloClient helloClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
+    helloClient.startThreadPool();
+    helloClient.sayHello();
+    helloClient.sayHelloAgain();
+    helloClient.waitForComplete();
+}
+
+int main()
+{
+    InitLogger();
+    SetLogLevel(CLIENT_CONFIG.GET_LOG_LEVEL());
+
+    std::string serverAddress = std::string("0.0.0.0:") + std::to_string(CLIENT_CONFIG.GET_GRPC_SERVER_PORT());
+    if (CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC()) {
+        UseAsyncClient(serverAddress);
+    }
+    else {
+        UseSyncClient(serverAddress);
+    }
 
     return 0;
 }

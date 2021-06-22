@@ -19,12 +19,14 @@ class AbstractAsyncClient
     boost::asio::thread_pool threadPool;
     std::map<void*, std::shared_ptr<AsyncCallResponseProcessor>> tokens;
     std::mutex tokensLock;
-    virtual void asyncCompleteRpc() = 0;
 
     void addToken(void* token, std::shared_ptr<AsyncCallResponseProcessor> processor);
     bool isTokenExist(void* token);
     void removeToken(void* token);
-    bool isComplete();
+    void removeAllTokens();
+    size_t getTokenCount();
+    std::shared_ptr<AsyncCallResponseProcessor> getProcesser(void* token);
+    void asyncCompleteRpc();
 
 protected:
 

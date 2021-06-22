@@ -3425,3 +3425,216 @@ service.cpp:23][listen] request: 2021-06-22 02:20:09.197282 - "Speaking!"
 [2021-06-22 04:44:09.301][info][pid 16145][tid 16149][chat_service.cpp:57][talk] request: 2021-06-22 04:44:09.300829 - "9"
 [2021-06-22 04:44:11.269][info][pid 16145][tid 16241][main.cpp:11][operator()] signal(2) received
 [2021-06-22 04:44:11.270][info][pid 16145][tid 16241][server.cpp:51][stop] Server stopped
+[2021-06-22 12:52:23.137][info][pid 19044][tid 19055][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 12:52:23.137][info][pid 19044][tid 19054][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:52:24.121][info][pid 19044][tid 19052][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:24.121][info][pid 19044][tid 19050][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:24.121][info][pid 19044][tid 19051][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:24.121][info][pid 19044][tid 19048][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:24.121][info][pid 19044][tid 19049][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:24.123][info][pid 19044][tid 19053][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:24.138][info][pid 19044][tid 19054][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:24.139][info][pid 19044][tid 19055][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:27.558][info][pid 19114][tid 19124][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:52:27.558][info][pid 19114][tid 19125][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 12:52:28.547][info][pid 19114][tid 19123][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:28.547][info][pid 19114][tid 19118][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:28.547][info][pid 19114][tid 19120][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:28.547][info][pid 19114][tid 19119][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:28.547][info][pid 19114][tid 19121][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:28.549][info][pid 19114][tid 19122][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:28.559][info][pid 19114][tid 19125][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:28.559][info][pid 19114][tid 19124][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:31.805][info][pid 19180][tid 19190][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 12:52:31.805][info][pid 19180][tid 19184][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:52:32.790][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:32.790][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:32.790][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:32.791][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:32.791][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:32.792][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:32.807][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:32.808][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.792][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.792][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.793][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.792][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.792][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.792][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.809][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:33.809][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.794][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.794][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.795][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.794][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.795][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.795][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.810][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:34.810][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.796][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.796][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.797][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.796][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.796][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.797][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.812][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:35.812][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.798][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.799][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.798][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.799][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.799][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.799][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.813][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:36.813][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.800][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.801][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.801][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.801][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.802][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.802][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.814][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:37.814][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.802][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.803][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.802][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.802][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.803][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.804][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.816][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:38.816][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.804][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.804][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.804][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.805][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.805][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.806][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.817][info][pid 19180][tid 19184][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:39.818][info][pid 19180][tid 19190][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:40.805][info][pid 19180][tid 19187][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:40.806][info][pid 19180][tid 19186][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:40.806][info][pid 19180][tid 19191][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:40.806][info][pid 19180][tid 19185][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:40.806][info][pid 19180][tid 19189][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:40.809][info][pid 19180][tid 19188][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:40.818][info][pid 19180][tid 1[2021-06-22 12:52:42.347][info][pid 19329][tid 19336][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:52:42.348][info][pid 19329][tid 19335][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 12:52:43.333][info][pid 19329][tid 19337][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:43.334][info][pid 19329][tid 19334][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:43.334][info][pid 19329][tid 19333][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:43.333][info][pid 19329][tid 19340][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:43.334][info][pid 19329][tid 19338][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:43.334][info][pid 19329][tid 19339][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:43.350][info][pid 19329][tid 19336][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:43.350][info][pid 19329][tid 19335][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:44.946][info][pid 19374][tid 19378][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 12:52:44.946][info][pid 19374][tid 19385][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:52:45.931][info][pid 19374][tid 19384][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:45.931][info][pid 19374][tid 19383][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:45.931][info][pid 19374][tid 19382][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:45.931][info][pid 19374][tid 19380][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:45.931][info][pid 19374][tid 19381][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:45.932][info][pid 19374][tid 19379][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:45.948][info][pid 19374][tid 19385][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:45.948][info][pid 19374][tid 19378][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:46.920][info][pid 19414][tid 19418][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:52:46.921][info][pid 19414][tid 19422][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 12:52:47.911][info][pid 19414][tid 19423][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:47.911][info][pid 19414][tid 19425][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:47.911][info][pid 19414][tid 19424][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:47.911][info][pid 19414][tid 19419][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:47.911][info][pid 19414][tid 19421][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:47.912][info][pid 19414][tid 19420][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:47.921][info][pid 19414][tid 19422][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:47.922][info][pid 19414][tid 19418][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:48.966][info][pid 19454][tid 19465][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 12:52:48.966][info][pid 19454][tid 19463][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:52:49.950][info][pid 19454][tid 19461][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:49.950][info][pid 19454][tid 19464][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:49.950][info][pid 19454][tid 19462][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:49.951][info][pid 19454][tid 19467][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:49.950][info][pid 19454][tid 19466][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:49.951][info][pid 19454][tid 19460][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:49.967][info][pid 19454][tid 19465][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:49.968][info][pid 19454][tid 19463][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.952][info][pid 19454][tid 19464][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.952][info][pid 19454][tid 19461][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.952][info][pid 19454][tid 19466][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.952][info][pid 19454][tid 19462][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.952][info][pid 19454][tid 19467][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.954][info][pid 19454][tid 19460][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.969][info][pid 19454][tid 19463][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:50.969][info][pid 19454][tid 19465][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.953][info][pid 19454][tid 19461][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.954][info][pid 19454][tid 19466][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.954][info][pid 19454][tid 19462][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.954][info][pid 19454][tid 19467][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.955][info][pid 19454][tid 19460][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.955][info][pid 19454][tid 19464][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.970][info][pid 19454][tid 19465][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:51.970][info][pid 19454][tid 19463][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.955][info][pid 19454][tid 19466][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.955][info][pid 19454][tid 19462][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.955][info][pid 19454][tid 19467][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.956][info][pid 19454][tid 19461][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.956][info][pid 19454][tid 19464][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.956][info][pid 19454][tid 19460][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.971][info][pid 19454][tid 19463][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:52.972][info][pid 19454][tid 19465][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:53.957][info][pid 19454][tid 19462][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:53.957][info][pid 19454][tid 19467][abstract_async_client.cpp:42][asyncCompleteRpc] ssssssssss
+[2021-06-22 12:52:53[2021-06-22 13:06:28.385][info][pid 30163][tid 30169][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:28.385][info][pid 30163][tid 30174][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:31.508][info][pid 30219][tid 30225][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:31.509][info][pid 30219][tid 30230][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:33.307][info][pid 30243][tid 30252][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:33.308][info][pid 30243][tid 30249][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:35.094][info][pid 30283][tid 30291][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:35.094][info][pid 30283][tid 30288][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:37.041][info][pid 30323][tid 30333][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:37.041][info][pid 30323][tid 30327][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 12:39:22.160][info][pid 8519][tid 8519][server.cpp:36][start] Server listening on 0.0.0.0:50051
+[2021-06-22 12:39:24.570][info][pid 8519][tid 8523][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:39:24.570][info][pid 8519][tid 8562][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:39:38.972][info][pid 8519][tid 8523][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:39:38.972][info][pid 8519][tid 8563][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:44:12.763][info][pid 8519][tid 8760][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:44:12.764][info][pid 8519][tid 8523][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:51:02.948][info][pid 8519][tid 8760][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:51:02.949][info][pid 8519][tid 12451][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:52:23.135][info][pid 8519][tid 17856][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:52:23.135][info][pid 8519][tid 8760][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:52:27.556][info][pid 8519][tid 17856][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:52:27.557][info][pid 8519][tid 19056][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:52:31.803][info][pid 8519][tid 19056][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:52:31.803][info][pid 8519][tid 19126][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:52:42.346][info][pid 8519][tid 19192][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:52:42.346][info][pid 8519][tid 19056][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:52:44.945][info][pid 8519][tid 19192][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:52:44.945][info][pid 8519][tid 19341][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:52:46.920][info][pid 8519][tid 19386][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 12:52:46.920][info][pid 8519][tid 19192][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:52:48.964][info][pid 8519][tid 19386][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 12:52:48.965][info][pid 8519][tid 19426][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 13:04:58.221][info][pid 8519][tid 19386][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 13:04:58.221][info][pid 8519][tid 19468][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 13:06:28.384][info][pid 8519][tid 19386][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 13:06:28.384][info][pid 8519][tid 28939][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 13:06:31.506][info][pid 8519][tid 19386][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 13:06:31.507][info][pid 8519][tid 30175][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 13:06:33.305][info][pid 8519][tid 30231][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 13:06:33.306][info][pid 8519][tid 19386][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 13:06:35.092][info][pid 8519][tid 30231][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 13:06:35.093][info][pid 8519][tid 30255][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 13:06:37.040][info][pid 8519][tid 30231][hello_service.cpp:21][sayHelloAgain] firstname: Bar, lastname: 
+[2021-06-22 13:06:37.040][info][pid 8519][tid 30295][hello_service.cpp:14][sayHello] firstname: Bar, lastname: 
+[2021-06-22 13:06:38.853][info][pid 8519][tid 30231][hello_service.cpp:21][sayHelloAgain] firstname: Ba[2021-06-22 13:06:38.855][info][pid 30363][tid 30373][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:38.856][info][pid 30363][tid 30374][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:40.458][info][pid 30390][tid 30398][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:40.458][info][pid 30390][tid 30401][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:42.025][info][pid 30427][tid 30433][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:42.026][info][pid 30427][tid 30434][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:43.509][info][pid 30457][tid 30462][async_hello_client.cpp:48][process] response: "Hello again, Bar "
+[2021-06-22 13:06:43.510][info][pid 30457][tid 30468][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:45.095][info][pid 30490][tid 30496][async_hello_client.cpp:24][process] response: "Hello, Bar "
+[2021-06-22 13:06:45.096][info][pid 30490][tid 30500][async_hello_client.cpp:48][process] response: "Hello again, Bar "
