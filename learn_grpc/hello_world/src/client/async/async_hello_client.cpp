@@ -90,10 +90,6 @@ void AsyncHelloClient::sayHelloAgain()
 
     std::shared_ptr<SayHelloAgainCall> call = std::make_shared<SayHelloAgainCall>();
 
-    // stub->PrepareAsyncSayHello() creates an RPC object, returning
-    // an instance to store in "call" but does not actually start the RPC
-    // Because we are using the asynchronous API, we need to hold on to
-    // the "call" instance in order to get updates on the ongoing RPC.
     call->responseReader = prepareAsyncCall(std::bind(&HelloService::Stub::PrepareAsyncsayHelloAgain, stub.get(), &call->context, request, std::placeholders::_1),
         call);
 
