@@ -7,7 +7,8 @@ HelloClient::HelloClient(std::shared_ptr<grpc::Channel> channel) :
     stub(HelloService::NewStub(channel))
 {}
 
-void HelloClient::sayHello() {
+void HelloClient::sayHello()
+{
     HelloRequest request;
     request.set_firstname("Foo");
     request.set_lastname("Bar");
@@ -27,7 +28,8 @@ void HelloClient::sayHello() {
     }
 }
 
-void HelloClient::sayHelloAgain() {
+void HelloClient::sayHelloAgain()
+{
     HelloRequest request;
     request.set_firstname("Foo");
     request.set_lastname("Bar");

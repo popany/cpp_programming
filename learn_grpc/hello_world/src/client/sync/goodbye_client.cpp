@@ -7,7 +7,8 @@ GoodbyeClient::GoodbyeClient(std::shared_ptr<grpc::Channel> channel) :
     stub(GoodbyeService::NewStub(channel))
 {}
 
-void GoodbyeClient::sayGoodbye() {
+void GoodbyeClient::sayGoodbye()
+{
     GoodbyeRequest request;
     request.set_firstname("Foo");
     request.set_lastname("Bar");
@@ -27,7 +28,8 @@ void GoodbyeClient::sayGoodbye() {
     }
 }
 
-void GoodbyeClient::sayGoodbyeAgain() {
+void GoodbyeClient::sayGoodbyeAgain()
+{
     GoodbyeRequest request;
     request.set_firstname("Foo");
     request.set_lastname("Bar");

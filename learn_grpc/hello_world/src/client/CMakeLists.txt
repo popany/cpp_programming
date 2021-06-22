@@ -1,7 +1,7 @@
+add_subdirectory(sync)
+add_subdirectory(async)
+
 set(client_srcs
-    chat_client.cpp
-    goodbye_client.cpp
-    hello_client.cpp
     main.cpp)
 
 add_executable(client
@@ -11,7 +11,8 @@ target_link_libraries(client
     logger
     utils
     abstract_config
-    grpc_protos)
+    sync_client
+    async_client)
 
 install(TARGETS client
     RUNTIME

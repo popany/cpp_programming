@@ -13,7 +13,7 @@ ChatClient::ChatClient(std::shared_ptr<grpc::Channel> channel) :
 void ChatClient::greet()
 {
     ClientWords request;
-    request.set_timestamp(GetCurrentTimeString());
+    request.set_timestamp(utils::GetCurrentTimeString());
     request.set_content("Nice to meet you!");
 
     ServerWords response;
@@ -34,7 +34,7 @@ void ChatClient::greet()
 void ChatClient::listen()
 {
     ClientWords request;
-    request.set_timestamp(GetCurrentTimeString());
+    request.set_timestamp(utils::GetCurrentTimeString());
     request.set_content("Speaking!");
 
     grpc::ClientContext context;
@@ -58,15 +58,15 @@ void ChatClient::speak()
     auto writer = stub->speak(&context, &response);
 
     ClientWords request;
-    request.set_timestamp(GetCurrentTimeString());
+    request.set_timestamp(utils::GetCurrentTimeString());
     request.set_content("111");
     writer->Write(request);
 
-    request.set_timestamp(GetCurrentTimeString());
+    request.set_timestamp(utils::GetCurrentTimeString());
     request.set_content("222");
     writer->Write(request);
 
-    request.set_timestamp(GetCurrentTimeString());
+    request.set_timestamp(utils::GetCurrentTimeString());
     request.set_content("333");
     writer->Write(request);
 
@@ -88,7 +88,7 @@ void ChatClient::talk()
     std::thread tw([stream]() {
         for (int i = 0; i < 10; i++) {
             ClientWords request;
-            request.set_timestamp(GetCurrentTimeString());
+            request.set_timestamp(utils::GetCurrentTimeString());
             request.set_content(std::to_string(i));
             stream->Write(request);
             std::this_thread::sleep_for(std::chrono::milliseconds(10));

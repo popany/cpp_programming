@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logger.h"
+#include "utils.h"
 #include "abstract_config.h"
 
 const std::string DEFAULT_SERVER_CONFIG_FILE_PATH = "./server.config";
@@ -9,7 +10,7 @@ const std::string DEFAULT_SERVER_CONFIG_FILE_PATH = "./server.config";
 
 class ServerConfig : public AbstractConfig
 {
-    DEFINE_CONFIG_ITEM(LOG_LEVEL, LogLevel, parseLogLevel, "INFO");
+    DEFINE_CONFIG_ITEM(LOG_LEVEL, LogLevel, utils::ParseLogLevel, "INFO");
     DEFINE_CONFIG_ITEM(GRPC_SERVER_PORT, int, std::stoi, "50051");
 
     void initConfig() override

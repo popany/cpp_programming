@@ -13,7 +13,7 @@ ChatServiceImpl& ChatServiceImpl::getInstance()
 grpc::Status ChatServiceImpl::greet(grpc::ServerContext* context, const ClientWords* request, ServerWords* response)
 {
     LOG_INFO("request: {} - \"{}\"", request->timestamp(), request->content());
-    response->set_timestamp(GetCurrentTimeString());
+    response->set_timestamp(utils::GetCurrentTimeString());
     response->set_content("Me too!");
     return grpc::Status::OK;
 }
@@ -23,15 +23,15 @@ grpc::Status ChatServiceImpl::listen(grpc::ServerContext* context, const ClientW
     LOG_INFO("request: {} - \"{}\"", request->timestamp(), request->content());
     
     ServerWords response;
-    response.set_timestamp(GetCurrentTimeString());
+    response.set_timestamp(utils::GetCurrentTimeString());
     response.set_content("aaa");
     writer->Write(response);
 
-    response.set_timestamp(GetCurrentTimeString());
+    response.set_timestamp(utils::GetCurrentTimeString());
     response.set_content("bbb");
     writer->Write(response);
 
-    response.set_timestamp(GetCurrentTimeString());
+    response.set_timestamp(utils::GetCurrentTimeString());
     response.set_content("ccc");
     writer->Write(response);
 
@@ -45,7 +45,7 @@ grpc::Status ChatServiceImpl::speak(grpc::ServerContext* context, grpc::ServerRe
         LOG_INFO("request: {} - \"{}\"", request.timestamp(), request.content());
     }
 
-    response->set_timestamp(GetCurrentTimeString());
+    response->set_timestamp(utils::GetCurrentTimeString());
     response->set_content("OK.");
     return grpc::Status::OK;
 }
@@ -57,7 +57,7 @@ grpc::Status ChatServiceImpl::talk(grpc::ServerContext* context, grpc::ServerRea
         LOG_INFO("request: {} - \"{}\"", request.timestamp(), request.content());
 
         ServerWords response;
-        response.set_timestamp(GetCurrentTimeString());
+        response.set_timestamp(utils::GetCurrentTimeString());
         response.set_content(request.content());
         stream->Write(response);
     }
