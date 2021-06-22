@@ -61,7 +61,7 @@ void AsyncHelloClient::sayHello()
 {
     HelloRequest request;
     request.set_firstname("Foo");
-    request.set_firstname("Bar");
+    request.set_lastname("Bar");
 
     std::shared_ptr<SayHelloCall> call = std::make_shared<SayHelloCall>();
 
@@ -86,7 +86,7 @@ void AsyncHelloClient::sayHelloAgain()
 {
     HelloRequest request;
     request.set_firstname("Foo");
-    request.set_firstname("Bar");
+    request.set_lastname("Bar");
 
     std::shared_ptr<SayHelloAgainCall> call = std::make_shared<SayHelloAgainCall>();
 

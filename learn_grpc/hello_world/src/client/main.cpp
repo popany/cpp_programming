@@ -29,8 +29,10 @@ void UseAsyncClient(const std::string& serverAddress)
 {
     AsyncHelloClient helloClient(grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()));
     helloClient.startThreadPool();
-    helloClient.sayHello();
-    helloClient.sayHelloAgain();
+    for (int i = 0; i < 100; i++) {
+        helloClient.sayHello();
+        helloClient.sayHelloAgain();
+    }
     helloClient.waitForComplete();
 }
 
