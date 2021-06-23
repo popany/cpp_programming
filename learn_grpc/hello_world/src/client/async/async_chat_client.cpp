@@ -69,16 +69,7 @@ void AsyncChatClient::greet()
 
 class ListenCall : public EventHandler
 {
-    enum CALL_STATE
-    {
-        IDLE = 0,
-        START_CALL,
-        START_READ,
-        END_READ,
-        END_CALL,
-    };
-
-    CALL_STATE callState;
+    bool complete;
 
 public:
     // Context for the client. It could be used to convey extra information to
@@ -93,11 +84,59 @@ public:
     ServerWords response;
 
     ListenCall() :
-        callState(CALL_STATE::IDLE)
+        complete(false)
     {}
 
     void process(bool optOk, Event event) override
     {
+        switch(event.getOpt()) {
+            case EVENT_OPT::START_CALL:
+            {
+                if (optOk) {
+                    event.setOpt(EVENT_OPT::READ);
+                    asyncReader->Read(&response, event.getToken());
+                    LOG_DEBUG("start read, key({})", event.getKey());
+                }
+                else {
+                    LOG_ERROR("StartCall operation not ok, key({})", event.getKey());
+                    complete = true;
+                }
+            }
+            break;
+            case EVENT_OPT::READ:
+            {
+                if (optOk) {
+                    LOG_INFO("response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
+                    asyncReader->Read(&response, event.getToken());
+                }
+                else {
+                    LOG_DEBUG("read end, key({})", event.getKey());
+                    event.setOpt(EVENT_OPT::FINISH);
+                    asyncReader->Finish(&status, event.getToken());
+                }
+            }
+            break;
+            case EVENT_OPT::FINISH:
+            {
+                if (optOk) {
+                    if (status.ok()) {
+                        LOG_INFO("end call, key({})", event.getKey());
+                    } else {
+                        LOG_ERROR("rpc failed, key({}), error_code({}), error_message: \"{}\"", event.getKey(), status.error_code(), status.error_message());
+                    }
+                }
+                else {
+                    LOG_ERROR("Finish operation not ok, key({})", event.getKey());
+                }
+                complete = true;
+            }
+            break;
+            default:
+                LOG_ERROR("unexpected routine, key({}), opt({})", event.getKey(), event.getOpt());
+        }
+
+#if 0
+
         if (callState == CALL_STATE::START_CALL) {
             if (optOk) {
                 callState = CALL_STATE::START_READ;
@@ -136,16 +175,16 @@ public:
         else {
             LOG_ERROR("unexpected routine, key({}), callState({})", event.getKey(), callState);
         }
+#endif
     }
 
     bool isComplete() override
     {
-        return callState == CALL_STATE::END_CALL;
+        return complete;
     }
 
     void start(event_key_t key)
     {
-        callState = CALL_STATE::START_CALL;
         Event event(key);
         event.setOpt(EVENT_OPT::START_CALL);
         asyncReader->StartCall(event.getToken());

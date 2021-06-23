@@ -15,6 +15,7 @@ enum EVENT_OPT
 {
     START_CALL = 0,
     FINISH = 1,
+    READ = 2,
 };
 
 class Event
