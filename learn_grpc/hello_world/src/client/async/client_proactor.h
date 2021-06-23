@@ -5,6 +5,7 @@
 #include <boost/asio/thread_pool.hpp>
 #include <map>
 #include <mutex>
+#include <vector>
 
 class AsyncCallResponseProcessor
 {
@@ -15,12 +16,12 @@ public:
 
 class ClientProactor
 {
-    // 
     // Completion Queues and Threading in the Async API - https://grpc.github.io/grpc/cpp/md_doc_cpp_perf_notes.html
     // Right now, the best performance trade-off is having numcpu's threads and one completion queue per thread.
-    grpc::CompletionQueue cq;
+    std::vector<grpc::CompletionQueue> cqs; // can just use one cq for every thread in the threadPool
     int threadPoolSize;
     boost::asio::thread_pool threadPool;
+    std::atomic_int32_t cqIdx;
 
     std::map<void*, std::shared_ptr<AsyncCallResponseProcessor>> tokens;
     std::mutex tokensLock;
@@ -31,7 +32,7 @@ class ClientProactor
     void removeAllTokens();
     size_t getTokenCount();
     std::shared_ptr<AsyncCallResponseProcessor> getProcesser(void* token);
-    void asyncCompleteRpc();
+    void asyncCompleteRpc(grpc::CompletionQueue& cq);
 
     ClientProactor(int threadPoolSize);
 public:
@@ -45,7 +46,7 @@ public:
         -> typename std::result_of<F(grpc::CompletionQueue*)>::type
     {
         addToken(processor.get(), processor);
-        return prepare(&cq);
+        return prepare(&cqs[cqIdx++ % threadPoolSize]);
     }
 
     void startThreadPool();

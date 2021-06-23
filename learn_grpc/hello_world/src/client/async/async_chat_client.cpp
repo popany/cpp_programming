@@ -39,6 +39,31 @@ public:
     }
 };
 
+AsyncChatClient::AsyncChatClient(std::shared_ptr<grpc::Channel> channel) :
+    stub(ChatService::NewStub(channel))
+{}
+
+void AsyncChatClient::greet()
+{
+    ClientWords request;
+    request.set_timestamp(utils::GetCurrentTimeString());
+    request.set_content("Nice to meet you!");
+
+    std::shared_ptr<GreetCall> call = std::make_shared<GreetCall>();
+
+    call->responseReader = ClientProactor::getInstance().prepareAsyncCall(std::bind(&ChatService::Stub::PrepareAsyncgreet, stub.get(), &call->context, request, std::placeholders::_1),
+        call);
+
+    // StartCall initiates the RPC call
+    call->responseReader->StartCall();
+
+    // Request that, upon completion of the RPC, "reply" be updated with the
+    // server's response; "status" with the indication of whether the operation
+    // was successful. Tag the request with the memory address of the call
+    // object.
+    call->responseReader->Finish(&call->response, &call->status, call.get());
+}
+
 class ListenCall : public AsyncCallResponseProcessor
 {
     enum CALL_STATE
@@ -121,31 +146,6 @@ public:
         asyncReader->StartCall(this);
     }
 };
-
-AsyncChatClient::AsyncChatClient(std::shared_ptr<grpc::Channel> channel) :
-    stub(ChatService::NewStub(channel))
-{}
-
-void AsyncChatClient::greet()
-{
-    ClientWords request;
-    request.set_timestamp(utils::GetCurrentTimeString());
-    request.set_content("Nice to meet you!");
-
-    std::shared_ptr<GreetCall> call = std::make_shared<GreetCall>();
-
-    call->responseReader = ClientProactor::getInstance().prepareAsyncCall(std::bind(&ChatService::Stub::PrepareAsyncgreet, stub.get(), &call->context, request, std::placeholders::_1),
-        call);
-
-    // StartCall initiates the RPC call
-    call->responseReader->StartCall();
-
-    // Request that, upon completion of the RPC, "reply" be updated with the
-    // server's response; "status" with the indication of whether the operation
-    // was successful. Tag the request with the memory address of the call
-    // object.
-    call->responseReader->Finish(&call->response, &call->status, call.get());
-}
 
 void AsyncChatClient::listen()
 {

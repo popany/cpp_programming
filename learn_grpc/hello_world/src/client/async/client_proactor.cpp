@@ -6,8 +6,10 @@
 #include "../config/client_config.h"
 
 ClientProactor::ClientProactor(int threadPoolSize):
+    cqs(threadPoolSize),
     threadPoolSize(threadPoolSize),
-    threadPool(threadPoolSize)
+    threadPool(threadPoolSize),
+    cqIdx(0)
 {}
 
 void ClientProactor::addToken(void* token, std::shared_ptr<AsyncCallResponseProcessor> processor)
@@ -46,7 +48,7 @@ std::shared_ptr<AsyncCallResponseProcessor> ClientProactor::getProcesser(void* t
     return tokens[token];
 }
 
-void ClientProactor::asyncCompleteRpc()
+void ClientProactor::asyncCompleteRpc(grpc::CompletionQueue& cq)
 {
     void* token;
     bool ok = false;
@@ -84,7 +86,7 @@ void ClientProactor::asyncCompleteRpc()
 void ClientProactor::startThreadPool()
 {
     for (int i = 0; i < threadPoolSize; i++) {
-        boost::asio::post(threadPool, std::bind(&ClientProactor::asyncCompleteRpc, this));
+        boost::asio::post(threadPool, std::bind(&ClientProactor::asyncCompleteRpc, this, std::ref(cqs[i])));
     }
 }
 
