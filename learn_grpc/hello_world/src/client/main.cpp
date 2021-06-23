@@ -45,6 +45,13 @@ void UseAsyncClient(const std::string& serverAddress)
     for (int i = 0; i < CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_REQUEST_COUNT(); i++) {
         chatClient.greet();
         chatClient.listen();
+        AsyncChatWriter<const std::string&>& writer = chatClient.speak();
+        writer.write(std::to_string(i) + " - 1");
+        writer.write(std::to_string(i) + " - 2");
+        writer.write(std::to_string(i) + " - 3");
+        writer.write(std::to_string(i) + " - 4");
+        writer.write(std::to_string(i) + " - 5");
+        writer.close();
     }
 
     ClientProactor::getInstance().waitForComplete();

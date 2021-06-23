@@ -190,7 +190,59 @@ public:
 
     void process(bool optOk, Event event) override
     {
+                if (key != event.getKey()) {
+            throw std::runtime_error("wrong key");
+        }
 
+        switch(event.getOpt()) {
+            case EVENT_OPT::START_CALL:
+            {
+                if (optOk) {
+                    LOG_DEBUG("StartCall ok, key({})", event.getKey());
+                }
+                else {
+                    LOG_ERROR("StartCall operation not ok, key({})", event.getKey());
+                }
+            }
+            break;
+            case EVENT_OPT::WRITE:
+            {
+                if (optOk) {
+                    LOG_DEBUG("Write ok, key({})", event.getKey());
+                }
+                else {
+                    LOG_ERROR("Write operation not ok, key({})", event.getKey());
+                }
+            }
+            break;
+            case EVENT_OPT::WRITE_DONE:
+            {
+                if (optOk) {
+                    LOG_DEBUG("WritesDone ok, key({})", event.getKey());
+                }
+                else {
+                    LOG_ERROR("WritesDone operation not ok, key({})", event.getKey());
+                }
+            }
+            break;
+            case EVENT_OPT::FINISH:
+            {
+                if (optOk) {
+                    if (status.ok()) {
+                        LOG_INFO("Finish, key({}), response: {} - \"{}\"", event.getKey(), response.timestamp(), response.content());
+                    } else {
+                        LOG_ERROR("rpc failed, key({}), error_code({}), error_message: \"{}\"", event.getKey(), status.error_code(), status.error_message());
+                    }
+                }
+                else {
+                    LOG_ERROR("Finish operation not ok, key({})", event.getKey());
+                }
+                finish = true;
+            }
+            break;
+            default:
+                LOG_ERROR("unexpected routine, key({}), opt({})", event.getKey(), event.getOpt());
+        }
     }
 
     bool isComplete() override
