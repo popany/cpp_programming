@@ -4,7 +4,7 @@
 #include "logger.h"
 #include <functional>
 
-class SayGoodbyeCall : public AsyncCallResponseProcessor
+class SayGoodbyeCall : public EventHandler
 {
 public:
     GoodbyeResponse response;
@@ -18,9 +18,9 @@ public:
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<GoodbyeResponse>> responseReader;
 
-    void process(bool operationOk) override
+    void process(bool optOk, Event event) override
     {
-        if (operationOk) {
+        if (optOk) {
             if (status.ok()) {
                 LOG_INFO("response: \"{}\"", response.greeting());
             } else {
@@ -38,7 +38,7 @@ public:
     }
 };
 
-struct SayGoodbyeAgainCall : public AsyncCallResponseProcessor
+struct SayGoodbyeAgainCall : public EventHandler
 {
 public:
     GoodbyeResponse response;
@@ -52,9 +52,9 @@ public:
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<GoodbyeResponse>> responseReader;
 
-    void process(bool operationOk) override
+    void process(bool optOk, Event event) override
     {
-        if (operationOk) {
+        if (optOk) {
             if (status.ok()) {
                 LOG_INFO("response: \"{}\"", response.greeting());
             } else {
@@ -84,21 +84,24 @@ void AsyncGoodbyeClient::sayGoodbye()
 
     std::shared_ptr<SayGoodbyeCall> call = std::make_shared<SayGoodbyeCall>();
 
+    event_key_t key;
     // stub->PrepareAsyncSayGoodbye() creates an RPC object, returning
     // an instance to store in "call" but does not actually start the RPC
     // Because we are using the asynchronous API, we need to hold on to
     // the "call" instance in order to get updates on the ongoing RPC.
     call->responseReader = ClientProactor::getInstance().prepareAsyncCall(std::bind(&GoodbyeService::Stub::PrepareAsyncsayGoodbye, stub.get(), &call->context, request, std::placeholders::_1),
-        call);
+        call, key);
 
     // StartCall initiates the RPC call
     call->responseReader->StartCall();
 
+    Event event(key);
+    event.setOpt(EVENT_OPT::FINISH);
     // Request that, upon completion of the RPC, "reply" be updated with the
     // server's response; "status" with the indication of whether the operation
     // was successful. Tag the request with the memory address of the call
     // object.
-    call->responseReader->Finish(&call->response, &call->status, call.get());
+    call->responseReader->Finish(&call->response, &call->status, event.getToken());
 }
 
 void AsyncGoodbyeClient::sayGoodbyeAgain()
@@ -109,15 +112,18 @@ void AsyncGoodbyeClient::sayGoodbyeAgain()
 
     std::shared_ptr<SayGoodbyeAgainCall> call = std::make_shared<SayGoodbyeAgainCall>();
 
+    event_key_t key;
     call->responseReader = ClientProactor::getInstance().prepareAsyncCall(std::bind(&GoodbyeService::Stub::PrepareAsyncsayGoodbyeAgain, stub.get(), &call->context, request, std::placeholders::_1),
-        call);
+        call, key);
 
     // StartCall initiates the RPC call
     call->responseReader->StartCall();
 
+    Event event(key);
+    event.setOpt(EVENT_OPT::FINISH);
     // Request that, upon completion of the RPC, "reply" be updated with the
     // server's response; "status" with the indication of whether the operation
     // was successful. Tag the request with the memory address of the call
     // object.
-    call->responseReader->Finish(&call->response, &call->status, call.get());
+    call->responseReader->Finish(&call->response, &call->status, event.getToken());
 }

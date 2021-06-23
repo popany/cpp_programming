@@ -12,42 +12,6 @@ ClientProactor::ClientProactor(int threadPoolSize):
     cqIdx(0)
 {}
 
-void ClientProactor::addToken(void* token, std::shared_ptr<AsyncCallResponseProcessor> processor)
-{
-    std::lock_guard<std::mutex> lock(tokensLock);
-    tokens.insert({ token, processor });
-}
-
-bool ClientProactor::isTokenExist(void* token)
-{
-    std::lock_guard<std::mutex> lock(tokensLock);
-    return tokens.count(token);
-}
-
-void ClientProactor::removeToken(void* token)
-{
-    std::lock_guard<std::mutex> lock(tokensLock);
-    tokens.erase(token);
-}
-
-void ClientProactor::removeAllTokens()
-{
-    std::lock_guard<std::mutex> lock(tokensLock);
-    tokens.clear();
-}
-
-size_t ClientProactor::getTokenCount()
-{
-    std::lock_guard<std::mutex> lock(tokensLock);
-    return tokens.size();
-}
-
-std::shared_ptr<AsyncCallResponseProcessor> ClientProactor::getProcesser(void* token)
-{
-    std::lock_guard<std::mutex> lock(tokensLock);
-    return tokens[token];
-}
-
 void ClientProactor::asyncCompleteRpc(grpc::CompletionQueue& cq)
 {
     void* token;
@@ -57,28 +21,29 @@ void ClientProactor::asyncCompleteRpc(grpc::CompletionQueue& cq)
             std::chrono::system_clock::now() + std::chrono::milliseconds(CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_POLLING_INTERVAL_MILLISECONDS()));
 
         if (nextStatus == grpc::CompletionQueue::NextStatus::SHUTDOWN) {
-            LOG_INFO("cq shutdown, remaining tokens count: {}", getTokenCount());
-            removeAllTokens();
+            LOG_INFO("cq shutdown, remaining eventHandler count: {}", handlerManager.count());
+            handlerManager.clear();
             return;
         }
         if (nextStatus == grpc::CompletionQueue::NextStatus::TIMEOUT) {
-            if (getTokenCount()) {
+            if (handlerManager.count()) {
                 continue;
             }
             else {
                 break;
             }
         }
-        if (!isTokenExist(token)) {
-            LOG_WARN("token({}) unrecognized ", utils::IntToHex((size_t)token));
+        Event event(token);
+        if (!handlerManager.contains(event.getKey())) {
+            LOG_WARN("event key({}) not exist", event.getKey());
             continue;
         }
 
-        auto processor = getProcesser(token);
-        processor->process(ok);
+        auto handler = handlerManager.get(event.getKey());
+        handler->process(ok, event);
 
-        if (processor->isComplete()) {
-            removeToken(token);
+        if (handler->isComplete()) {
+            handlerManager.remove(event.getKey());
         }
     }
 }
