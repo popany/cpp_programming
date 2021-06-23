@@ -19,18 +19,39 @@ public:
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<ServerWords>> responseReader;
 
-    void process() override
+    void process(bool operationOk) override
     {
-        if (status.ok()) {
-            LOG_INFO("response: {} - \"{}\"", response.timestamp(), response.content());
-        } else {
-            LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
+        if (operationOk) {
+            if (status.ok()) {
+                LOG_INFO("response: {} - \"{}\"", response.timestamp(), response.content());
+            } else {
+                LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
+            }
         }
+        else {
+            LOG_ERROR("operation not ok");
+        }
+    }
+
+    bool isComplete() override
+    {
+        return true;
     }
 };
 
 class ListenCall : public AsyncCallResponseProcessor
 {
+    enum CALL_STATE
+    {
+        IDLE = 0,
+        START_CALL,
+        START_READ,
+        END_READ,
+        END_CALL,
+    };
+
+    CALL_STATE callState;
+
 public:
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
@@ -41,25 +62,63 @@ public:
 
     std::unique_ptr<grpc::ClientAsyncReader<ServerWords>> asyncReader;
 
-    bool readStarted;
     ServerWords response;
 
     ListenCall() :
-        readStarted(false)
+        callState(CALL_STATE::IDLE)
     {}
 
-    void process() override
+    void process(bool operationOk) override
     {
-        if (status.ok()) {
-            if (readStarted) {
-                LOG_INFO("response: {} - \"{}\"", response.timestamp(), response.content());
+        if (callState == CALL_STATE::START_CALL) {
+            if (operationOk) {
+                callState = CALL_STATE::START_READ;
+                asyncReader->Read(&response, this);
+                LOG_DEBUG("start read, token({})", utils::PtrToHex(this));
             }
-            LOG_INFO("sssssssssssss");
-            asyncReader->Read(&response, this);
-            readStarted = true;
-        } else {
-            LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
+            else {
+                LOG_ERROR("StartCall operation not ok, token({})", utils::PtrToHex(this));
+                callState = CALL_STATE::END_CALL;
+            }
         }
+        else if (callState == CALL_STATE::START_READ) {
+            if (operationOk) {
+                LOG_INFO("response: {} - \"{}\", token({})", response.timestamp(), response.content(), utils::PtrToHex(this));
+                asyncReader->Read(&response, this);
+            }
+            else {
+                LOG_DEBUG("read end, token({})", utils::PtrToHex(this));
+                callState = CALL_STATE::END_READ;
+                asyncReader->Finish(&status, this);
+            }
+        }
+        else if (callState == CALL_STATE::END_READ) {
+            if (operationOk) {
+                if (status.ok()) {
+                    LOG_INFO("end call, token({})", utils::PtrToHex(this));
+                } else {
+                    LOG_ERROR("rpc failed, token({}), error_code({}), error_message: \"{}\"", utils::PtrToHex(this), status.error_code(), status.error_message());
+                }
+            }
+            else {
+                LOG_ERROR("Finish operation not ok, token({})", utils::PtrToHex(this));
+            }
+            callState = CALL_STATE::END_CALL;
+        }
+        else {
+            LOG_ERROR("unexpected routine, token({}), callState({})", utils::PtrToHex(this), callState);
+        }
+    }
+
+    bool isComplete() override
+    {
+        return callState == CALL_STATE::END_CALL;
+    }
+
+    void start()
+    {
+        callState = CALL_STATE::START_CALL;
+        asyncReader->StartCall(this);
     }
 };
 
@@ -99,6 +158,5 @@ void AsyncChatClient::listen()
     call->asyncReader = ClientProactor::getInstance().prepareAsyncCall(std::bind(&ChatService::Stub::PrepareAsynclisten, stub.get(), &call->context, request, std::placeholders::_1),
         call);
 
-    // StartCall initiates the RPC call
-    call->asyncReader->StartCall(call.get());
+    call->start();
 }

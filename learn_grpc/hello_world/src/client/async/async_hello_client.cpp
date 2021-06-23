@@ -18,13 +18,23 @@ public:
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<HelloResponse>> responseReader;
 
-    void process() override
+    void process(bool operationOk) override
     {
-        if (status.ok()) {
-            LOG_INFO("response: \"{}\"", response.greeting());
-        } else {
-            LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
+        if (operationOk) {
+            if (status.ok()) {
+                LOG_INFO("response: \"{}\"", response.greeting());
+            } else {
+                LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
+            }
         }
+        else {
+            LOG_ERROR("operation not ok");
+        }
+    }
+
+    bool isComplete() override
+    {
+        return true;
     }
 };
 
@@ -42,13 +52,23 @@ public:
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<HelloResponse>> responseReader;
 
-    void process() override
+    void process(bool operationOk) override
     {
-        if (status.ok()) {
-            LOG_INFO("response: \"{}\"", response.greeting());
-        } else {
-            LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
+        if (operationOk) {
+            if (status.ok()) {
+                LOG_INFO("response: \"{}\"", response.greeting());
+            } else {
+                LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
+            }
         }
+        else {
+            LOG_ERROR("operation not ok");
+        }
+    }
+
+    bool isComplete() override
+    {
+        return true;
     }
 };
 

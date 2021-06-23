@@ -9,14 +9,19 @@
 class AsyncCallResponseProcessor
 {
 public:
-    virtual void process() = 0;
+    virtual void process(bool operationOk) = 0; 
+    virtual bool isComplete() = 0;
 };
 
 class ClientProactor
 {
+    // 
+    // Completion Queues and Threading in the Async API - https://grpc.github.io/grpc/cpp/md_doc_cpp_perf_notes.html
+    // Right now, the best performance trade-off is having numcpu's threads and one completion queue per thread.
     grpc::CompletionQueue cq;
     int threadPoolSize;
     boost::asio::thread_pool threadPool;
+
     std::map<void*, std::shared_ptr<AsyncCallResponseProcessor>> tokens;
     std::mutex tokensLock;
 

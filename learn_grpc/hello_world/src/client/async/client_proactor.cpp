@@ -71,13 +71,13 @@ void ClientProactor::asyncCompleteRpc()
             LOG_WARN("token({}) unrecognized ", utils::IntToHex((size_t)token));
             continue;
         }
-        if (!ok) {
-            LOG_ERROR("token({}) not ok", utils::IntToHex((size_t)token));
+
+        auto processor = getProcesser(token);
+        processor->process(ok);
+
+        if (processor->isComplete()) {
             removeToken(token);
-            continue;
         }
-        getProcesser(token)->process();
-        removeToken(token);
     }
 }
 
