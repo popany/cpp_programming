@@ -48,45 +48,70 @@ public:
 
 };
 
-void Test(int sn, int tn, int pn)
+void Test(int sn, int atn, int rtn, int pn)
 {
 	Semaphore s(sn);
 	std::atomic_int a{ 0 };
+    std::atomic_int apn{ pn };
+    std::atomic_int rpn{ pn };
 
-	std::function<void(int)> f = [&] (int id) {
-		for (int i = 0; i < pn; i++) {
+	std::function<void(int)> aq = [&] (int id) {
+		while (apn) {
 			s.acquire();
 
-            std::cout << id << " - acquire" << std::endl;
-
 			a++;
+            apn--;
+            std::cout << id << std::endl;
+
 			int x = a.load();
 			if (x > sn) {
 				std::cout << "error, x = " << x << std::endl;
+                throw std::runtime_error("");
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			a--;
+		}
+	};
 
-            std::cout << id << " - release" << std::endl;
+    std::function<void(int)> rl = [&] (int id) {
+		while (rpn) {
+            int e = a.load();
+            while (e > 0 && !a.compare_exchange_weak(e, e - 1)) {
+            }
+            if (e <= 0) {
+                // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
+
+            rpn--;
 
 			s.release();
 		}
 	};
 
-    std::vector<std::thread> v;
-    v.reserve(tn);
-    for (int i = 0; i <  tn; i++) {
-        v.emplace_back(std::thread(f, i));
+    std::vector<std::thread> av;
+    av.reserve(atn);
+    for (int i = 0; i <  atn; i++) {
+        av.emplace_back(std::thread(aq, i));
     }
 
-    for (auto& t : v) {
-        t.join();
+    std::vector<std::thread> rv;
+    rv.reserve(rtn);
+    for (int i = 0; i <  rtn; i++) {
+        rv.emplace_back(std::thread(rl, i));
+    }
+
+    for (int i = 0; i < atn; i++) {
+        av[i].join();
+    }
+
+    for (int i = 0; i < rtn; i++) {
+        rv[i].join();
     }
 }
 
 int main(int argc, char* argv[])
 {
-	Test(1, 2, 100);
+	Test(1, 2, 2, 1000);
 
     return 0;
 }
+
