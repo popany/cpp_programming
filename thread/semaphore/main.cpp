@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <functional>
+#include <vector>
 
 class Semaphore
 {
@@ -44,37 +45,46 @@ public:
 
 };
 
-void Test1()
+void Test(int sn, int tn, int pn)
 {
-	Semaphore s(1);
+	Semaphore s(sn);
 	std::atomic_int a{ 0 };
-	int n = 1000;
 
 	std::function<void(int)> f = [&] (int id) {
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i < pn; i++) {
 			s.acquire();
+
             std::cout << id << " - acquire" << std::endl;
+
+			a++;
 			int x = a.load();
-			if (x != 0) {
+			if (x > sn) {
 				std::cout << "error, x = " << x << std::endl;
 			}
-			a++;
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            //
 			a--;
+
             std::cout << id << " - release" << std::endl;
+
 			s.release();
 		}
 	};
 
-	std::thread t1(f, 1);
-	std::thread t2(f, 2);
-	t1.join();
-    t2.join();
+    std::vector<std::thread> v;
+    v.reserve(tn);
+    for (int i = 0; i <  tn; i++) {
+        v.emplace_back(std::thread(f, i));
+    }
+
+    for (auto& t : v) {
+        t.join();
+    }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	Test1();
+	Test(1, 2, 10);
 
     return 0;
 }
