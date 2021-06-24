@@ -37,33 +37,41 @@ public:
         }
     }
 
-    void release()
+    bool release()
     {
         int expected = count.load();
         while (expected < maxCount && !count.compare_exchange_weak(expected, expected + 1)) {
         }
+        if (expected == maxCount) {
+            return false;  // means the release option has no effect, i.e. the release option is lost
+        }
         std::unique_lock<std::mutex> lk(mtx);
-        cv.notify_one();
+        cv.notify_all();
+        return true;
     }
 
 };
 
-void Test(int sn, int atn, int rtn, int pn)
+void Test(int sn, int atn, int rtn, int count)
 {
 	Semaphore s(sn);
-	std::atomic_int a{ 0 };
-    std::atomic_int apn{ pn };
-    std::atomic_int rpn{ pn };
+	std::atomic_int number{ 0 };
+    std::atomic_int acquireCount{ 0 };
+    std::atomic_int releaseCount{ 0 };
 
 	std::function<void(int)> aq = [&] (int id) {
-		while (apn) {
+		while (true) {
+            int ac = acquireCount.load();
+            while (ac < count && !acquireCount.compare_exchange_weak(ac, ac + 1)) {
+            }
+            if (ac == count) {
+                break;
+            }
+
 			s.acquire();
 
-			a++;
-            apn--;
-            // std::cout << id << std::endl;
-
-			int x = a.load();
+			number++;
+			int x = number.load();
 			if (x > sn) {
 				std::cout << "error, x = " << x << std::endl;
                 throw std::runtime_error("");
@@ -72,18 +80,23 @@ void Test(int sn, int atn, int rtn, int pn)
 	};
 
     std::function<void(int)> rl = [&] (int id) {
-		while (rpn) {
-            int e = a.load();
-            while (e > 0 && !a.compare_exchange_weak(e, e - 1)) {
+		while (true) {
+            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            
+            int ac = acquireCount.load();
+            int rc = releaseCount.load();
+            while (rc < ac - sn && !releaseCount.compare_exchange_strong(rc, rc + 1)) {
             }
-            if (e <= 0) {
-                // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            if (rc == count - sn) {
+                break;
+            }
+            if (rc == ac - sn) {
                 continue;
             }
-
-            rpn--;
-
-			s.release();
+            
+            number--;
+			while (!s.release()) {  // make sure the release option will not be lost
+            }
 		}
 	};
 
