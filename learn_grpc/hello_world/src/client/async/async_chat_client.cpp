@@ -3,6 +3,7 @@
 #include "chat.grpc.pb.h"
 #include "logger.h"
 #include "utils.h"
+#include "semaphore.h"
 #include <functional>
 
 class GreetCall : public EventHandler
@@ -172,6 +173,7 @@ class SpeakCall : public EventHandler, public AsyncChatWriter<const std::string&
 {
     bool finish;
     bool closed;
+    utils::Semaphore canWrite;
 
 public:
     event_key_t key;
@@ -185,7 +187,8 @@ public:
 
     SpeakCall() :
         finish(false),
-        closed(false)
+        closed(false),
+        canWrite(1)
     {}
 
     void process(bool optOk, Event event) override
@@ -197,6 +200,7 @@ public:
         switch(event.getOpt()) {
             case EVENT_OPT::START_CALL:
             {
+                canWrite.release();
                 if (optOk) {
                     LOG_DEBUG("StartCall ok, key({})", event.getKey());
                 }
@@ -207,10 +211,9 @@ public:
             break;
             case EVENT_OPT::WRITE:
             {
-                if (optOk) {
-                    LOG_DEBUG("Write ok, key({})", event.getKey());
-                }
-                else {
+                canWrite.release();
+                LOG_DEBUG("Write ok, key({})", event.getKey());
+                if (!optOk) {
                     LOG_ERROR("Write operation not ok, key({})", event.getKey());
                 }
             }
@@ -254,6 +257,8 @@ public:
     {
         Event event(key);
         event.setOpt(EVENT_OPT::START_CALL);
+
+        canWrite.acquire();
         asyncWriter->StartCall(event.getToken());
 
         event.setOpt(EVENT_OPT::FINISH);
@@ -268,6 +273,8 @@ public:
         ClientWords request;
         request.set_timestamp(utils::GetCurrentTimeString());
         request.set_content(msg);
+
+        canWrite.acquire();
         asyncWriter->Write(request, event.getToken());
     }
 
@@ -275,6 +282,7 @@ public:
     {
         Event event(key);
         event.setOpt(EVENT_OPT::WRITE_DONE);
+        canWrite.acquire();
         asyncWriter->WritesDone(event.getToken());
         closed = true;
     }
