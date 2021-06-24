@@ -45,8 +45,10 @@ public:
         if (expected == maxCount) {
             return false;  // means the release option has no effect, i.e. the release option is lost
         }
-        std::unique_lock<std::mutex> lk(mtx);
-        cv.notify_all();
+        if (expected == 0) {  // bug
+            std::unique_lock<std::mutex> lk(mtx);
+            cv.notify_one();
+        }
         return true;
     }
 
