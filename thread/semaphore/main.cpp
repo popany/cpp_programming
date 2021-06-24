@@ -23,12 +23,17 @@ public:
 
     void acquire()   
     {
-        int expected = count.load();
-        while (!count.compare_exchange_weak(expected, expected - 1)) {
-        }
-        if (expected <= 0) {
-            std::unique_lock<std::mutex> lk(mtx);
-            cv.wait(lk, [&] { return count >= 0; });
+        while (true) {
+            int expected = count.load();
+            while (expected > 0 && !count.compare_exchange_weak(expected, expected - 1)) {
+            }
+            if (expected == 0) {
+                std::unique_lock<std::mutex> lk(mtx);
+                cv.wait(lk, [&] { return count > 0; });
+            }
+            else {
+                return;
+            }
         }
     }
 
@@ -37,10 +42,8 @@ public:
         int expected = count.load();
         while (expected < maxCount && !count.compare_exchange_weak(expected, expected + 1)) {
         }
-        if (expected <= 0) {
-            std::unique_lock<std::mutex> lk(mtx);
-            cv.notify_one();
-        }
+        std::unique_lock<std::mutex> lk(mtx);
+        cv.notify_one();
     }
 
 };
@@ -61,8 +64,7 @@ void Test(int sn, int tn, int pn)
 			if (x > sn) {
 				std::cout << "error, x = " << x << std::endl;
 			}
-			//std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            //
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			a--;
 
             std::cout << id << " - release" << std::endl;
@@ -84,7 +86,7 @@ void Test(int sn, int tn, int pn)
 
 int main(int argc, char* argv[])
 {
-	Test(1, 2, 10);
+	Test(1, 2, 100);
 
     return 0;
 }
