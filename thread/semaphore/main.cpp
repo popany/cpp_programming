@@ -85,12 +85,12 @@ void Test(int sn, int atn, int rtn, int count)
             
             int ac = acquireCount.load();
             int rc = releaseCount.load();
-            while (rc < ac - sn && !releaseCount.compare_exchange_strong(rc, rc + 1)) {
+            while (rc < ac - sn && !releaseCount.compare_exchange_weak(rc, rc + 1)) {
             }
             if (rc == count - sn) {
                 break;
             }
-            if (rc == ac - sn) {
+            if (rc >= ac - sn) {  // ac is not a fix value, so, rc can > ac - sn
                 continue;
             }
             
