@@ -110,48 +110,48 @@ void Test(int sn, int atn, int rtn, int pn)
 
 int main(int argc, char* argv[])
 {
-    std::cout << "1, 1, 1, 1000" << std::endl;
+    std::cout << "1, 1, 1, 10000" << std::endl;
 	Test(1, 1, 1, 10000);
-    std::cout << "1, 2, 1, 1000" << std::endl;
+    std::cout << "1, 2, 1, 10000" << std::endl;
 	Test(1, 2, 1, 10000);
-    std::cout << "1, 1, 2, 1000" << std::endl;
+    std::cout << "1, 1, 2, 10000" << std::endl;
 	Test(1, 1, 2, 10000);
-    std::cout << "1, 5, 3, 1000" << std::endl;
+    std::cout << "1, 5, 3, 10000" << std::endl;
 	Test(1, 5, 3, 10000);
-    std::cout << "1, 3, 5, 1000" << std::endl;
+    std::cout << "1, 3, 5, 10000" << std::endl;
 	Test(1, 3, 5, 10000);
 
-    std::cout << "2, 1, 1, 1000" << std::endl;
+    std::cout << "2, 1, 1, 10000" << std::endl;
 	Test(2, 1, 1, 10000);
-    std::cout << "2, 2, 1, 1000" << std::endl;
+    std::cout << "2, 2, 1, 10000" << std::endl;
 	Test(2, 2, 1, 10000);
-    std::cout << "2, 1, 2, 1000" << std::endl;
+    std::cout << "2, 1, 2, 10000" << std::endl;
 	Test(2, 1, 2, 10000);
-    std::cout << "2, 5, 3, 1000" << std::endl;
+    std::cout << "2, 5, 3, 10000" << std::endl;
 	Test(2, 5, 3, 10000);
-    std::cout << "2, 3, 5, 1000" << std::endl;
+    std::cout << "2, 3, 5, 10000" << std::endl;
 	Test(2, 3, 5, 10000);
 
-    std::cout << "3, 1, 1, 1000" << std::endl;
+    std::cout << "3, 1, 1, 10000" << std::endl;
 	Test(3, 1, 1, 10000);
-    std::cout << "3, 2, 1, 1000" << std::endl;
+    std::cout << "3, 2, 1, 10000" << std::endl;
 	Test(3, 2, 1, 10000);
-    std::cout << "3, 1, 2, 1000" << std::endl;
+    std::cout << "3, 1, 2, 10000" << std::endl;
 	Test(3, 1, 2, 10000);
-    std::cout << "3, 5, 3, 1000" << std::endl;
+    std::cout << "3, 5, 3, 10000" << std::endl;
 	Test(3, 5, 3, 10000);
-    std::cout << "3, 3, 5, 1000" << std::endl;
+    std::cout << "3, 3, 5, 10000" << std::endl;
 	Test(3, 3, 5, 10000);
 
-    std::cout << "5, 1, 1, 1000" << std::endl;
+    std::cout << "5, 1, 1, 10000" << std::endl;
 	Test(5, 1, 1, 10000);
-    std::cout << "5, 2, 1, 1000" << std::endl;
+    std::cout << "5, 2, 1, 10000" << std::endl;
 	Test(5, 2, 1, 10000);
-    std::cout << "5, 1, 2, 1000" << std::endl;
+    std::cout << "5, 1, 2, 10000" << std::endl;
 	Test(5, 1, 2, 10000);
-    std::cout << "5, 5, 3, 1000" << std::endl;
+    std::cout << "5, 5, 3, 10000" << std::endl;
 	Test(5, 5, 3, 10000);
-    std::cout << "5, 3, 5, 1000" << std::endl;
+    std::cout << "5, 3, 5, 10000" << std::endl;
 	Test(5, 3, 5, 10000);
 
     return 0;
