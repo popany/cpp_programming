@@ -304,3 +304,153 @@ AsyncChatWriter<const std::string&>& AsyncChatClient::speak()
     call->start();
     return *call;
 }
+
+class TalkCall : public EventHandler, public AsyncChatWriter<const std::string&>
+{
+    bool finish;
+    bool closed;
+    utils::Semaphore canWrite;
+
+public:
+    event_key_t key;
+    grpc::ClientContext context;
+
+    grpc::Status status;
+
+    std::unique_ptr<grpc::ClientAsyncReaderWriter<ClientWords, ServerWords>> asyncReaderWriter;
+
+    ServerWords response;
+
+    TalkCall() :
+        finish(false),
+        closed(false),
+        canWrite(1)
+    {}
+
+    void process(bool optOk, Event event) override
+    {
+        if (key != event.getKey()) {
+            throw std::runtime_error("wrong key");
+        }
+
+        switch(event.getOpt()) {
+            case EVENT_OPT::START_CALL:
+            {
+                if (optOk) {
+                    event.setOpt(EVENT_OPT::READ);
+                    asyncReaderWriter->Read(&response, event.getToken());
+                    LOG_DEBUG("StartCall ok, key({})", event.getKey());
+                }
+                else {
+                    LOG_ERROR("StartCall operation not ok, key({})", event.getKey());
+                    finish = true;
+                }
+ 
+                while (!canWrite.release()) {
+                }
+            }
+            break;
+            case EVENT_OPT::READ:
+            {
+                if (optOk) {
+                    LOG_INFO("response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
+                    asyncReaderWriter->Read(&response, event.getToken());
+                }
+                else {
+                    LOG_DEBUG("read end, key({})", event.getKey());
+                    event.setOpt(EVENT_OPT::FINISH);
+                    asyncReaderWriter->Finish(&status, event.getToken());
+                }
+            }
+            break;
+            case EVENT_OPT::WRITE:
+            {
+                while (!canWrite.release()) {
+                }
+                LOG_DEBUG("Write ok, key({})", event.getKey());
+                if (!optOk) {
+                    LOG_ERROR("Write operation not ok, key({})", event.getKey());
+                }
+            }
+            break;
+            case EVENT_OPT::WRITE_DONE:
+            {
+                if (optOk) {
+                    LOG_DEBUG("WritesDone ok, key({})", event.getKey());
+                }
+                else {
+                    LOG_ERROR("WritesDone operation not ok, key({})", event.getKey());
+                }
+                closed = true;
+            }
+            break;
+            case EVENT_OPT::FINISH:
+            {
+                if (optOk) {
+                    if (status.ok()) {
+                        LOG_INFO("Finish, key({}), response: {} - \"{}\"", event.getKey(), response.timestamp(), response.content());
+                    } else {
+                        LOG_ERROR("rpc failed, key({}), error_code({}), error_message: \"{}\"", event.getKey(), status.error_code(), status.error_message());
+                    }
+                }
+                else {
+                    LOG_ERROR("Finish operation not ok, key({})", event.getKey());
+                }
+                finish = true;
+            }
+            break;
+            default:
+                LOG_ERROR("unexpected routine, key({}), opt({})", event.getKey(), event.getOpt());
+        }
+    }
+
+    bool isComplete() override
+    {
+        return finish && closed;
+    }
+
+    void start()
+    {
+        Event event(key);
+        event.setOpt(EVENT_OPT::START_CALL);
+
+        canWrite.acquire();
+        asyncReaderWriter->StartCall(event.getToken());
+    }
+
+    void write(const std::string& msg) override
+    {
+        Event event(key);
+        event.setOpt(EVENT_OPT::WRITE);
+
+        ClientWords request;
+        request.set_timestamp(utils::GetCurrentTimeString());
+        request.set_content(msg);
+
+        canWrite.acquire();
+        asyncReaderWriter->Write(request, event.getToken());
+    }
+
+    void close() override
+    {
+        Event event(key);
+        event.setOpt(EVENT_OPT::WRITE_DONE);
+        canWrite.acquire();
+        asyncReaderWriter->WritesDone(event.getToken());
+    }
+};
+
+AsyncChatWriter<const std::string&>& AsyncChatClient::talk()
+{
+    ClientWords request;
+    request.set_timestamp(utils::GetCurrentTimeString());
+    request.set_content("Speaking!");
+
+    std::shared_ptr<TalkCall> call = std::make_shared<TalkCall>();
+
+    call->asyncReaderWriter = ClientProactor::getInstance().prepareAsyncCall(std::bind(&ChatService::Stub::PrepareAsynctalk, stub.get(), &call->context, std::placeholders::_1),
+        call, call->key);
+
+    call->start();
+    return *call;
+}

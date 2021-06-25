@@ -24,5 +24,5 @@ public:
     void greet();
     void listen();
     AsyncChatWriter<const std::string&>& speak();
-    void talk();
+    AsyncChatWriter<const std::string&>& talk();
 };

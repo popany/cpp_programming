@@ -52,6 +52,15 @@ void UseAsyncClient(const std::string& serverAddress)
         writer.write(std::to_string(i) + " - 4");
         writer.write(std::to_string(i) + " - 5");
         writer.close();
+
+        AsyncChatWriter<const std::string&>& writer2 = chatClient.talk();
+        writer2.write(std::to_string(i) + " - a");
+        writer2.write(std::to_string(i) + " - b");
+        writer2.write(std::to_string(i) + " - c");
+        writer2.write(std::to_string(i) + " - d");
+        writer2.write(std::to_string(i) + " - e");
+        writer2.close();
+ 
     }
 
     ClientProactor::getInstance().waitForComplete();
