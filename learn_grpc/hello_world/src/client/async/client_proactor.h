@@ -7,6 +7,7 @@
 #include <mutex>
 #include <vector>
 #include <stdexcept>
+#include <sstream>
 
 typedef uint32_t event_key_t;
 typedef uint32_t event_opt_t;
@@ -124,6 +125,15 @@ public:
     {
         std::lock_guard<std::mutex> lock(mtx);
         handlers.clear();
+    }
+
+    std::string getKeys() // for debug
+    {
+        std::stringstream ss;
+        for (const auto& kv : handlers) {
+            ss << kv.first << ",";
+        }
+        return ss.str();
     }
 };
 

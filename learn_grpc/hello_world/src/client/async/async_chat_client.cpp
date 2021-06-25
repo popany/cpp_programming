@@ -193,14 +193,15 @@ public:
 
     void process(bool optOk, Event event) override
     {
-                if (key != event.getKey()) {
+        if (key != event.getKey()) {
             throw std::runtime_error("wrong key");
         }
 
         switch(event.getOpt()) {
             case EVENT_OPT::START_CALL:
             {
-                canWrite.release();
+                while (!canWrite.release()) {
+                }
                 if (optOk) {
                     LOG_DEBUG("StartCall ok, key({})", event.getKey());
                 }
@@ -211,7 +212,8 @@ public:
             break;
             case EVENT_OPT::WRITE:
             {
-                canWrite.release();
+                while (!canWrite.release()) {
+                }
                 LOG_DEBUG("Write ok, key({})", event.getKey());
                 if (!optOk) {
                     LOG_ERROR("Write operation not ok, key({})", event.getKey());
@@ -226,6 +228,7 @@ public:
                 else {
                     LOG_ERROR("WritesDone operation not ok, key({})", event.getKey());
                 }
+                closed = true;
             }
             break;
             case EVENT_OPT::FINISH:
@@ -284,7 +287,6 @@ public:
         event.setOpt(EVENT_OPT::WRITE_DONE);
         canWrite.acquire();
         asyncWriter->WritesDone(event.getToken());
-        closed = true;
     }
 };
 

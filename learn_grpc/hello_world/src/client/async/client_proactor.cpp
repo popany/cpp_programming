@@ -21,11 +21,12 @@ void ClientProactor::asyncCompleteRpc(grpc::CompletionQueue& cq)
             std::chrono::system_clock::now() + std::chrono::milliseconds(CLIENT_CONFIG.GET_GRPC_CLIENT_ASYNC_POLLING_INTERVAL_MILLISECONDS()));
 
         if (nextStatus == grpc::CompletionQueue::NextStatus::SHUTDOWN) {
-            LOG_INFO("cq shutdown, remaining eventHandler count: {}", handlerManager.count());
+            LOG_INFO("cq shutdown, remaining eventHandler count: {}, keys: {}", handlerManager.count(), handlerManager.getKeys());
             handlerManager.clear();
             return;
         }
         if (nextStatus == grpc::CompletionQueue::NextStatus::TIMEOUT) {
+            LOG_DEBUG("handlerManager count: {}, keys: {}", handlerManager.count(), handlerManager.getKeys());
             if (handlerManager.count()) {
                 continue;
             }
