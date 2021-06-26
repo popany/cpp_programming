@@ -1,4 +1,5 @@
 #include "sync_server.h"
+#include "async_server.h"
 #include "logger.h"
 #include "config/server_config.h"
 #include <signal.h>
@@ -10,6 +11,7 @@ void HandleSignal(int signum)
         std::thread t([=]() {
             LOG_INFO("signal({}) received", signum);
             if (SERVER_CONFIG.GET_GRPC_SERVER_ASYNC()) {
+                AsyncServer::getInstance().stop();
             }
             else {
                 SyncServer::getInstance().stop();
@@ -32,6 +34,7 @@ int main()
     RegisterSignalHandler();
 
     if (SERVER_CONFIG.GET_GRPC_SERVER_ASYNC()) {
+        AsyncServer::getInstance().start();
     }
     else {
         SyncServer::getInstance().start();

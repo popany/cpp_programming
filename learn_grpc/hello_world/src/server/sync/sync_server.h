@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hello_service.h"
+#include <grpcpp/grpcpp.h>
 #include <memory>
 
 class SyncServer

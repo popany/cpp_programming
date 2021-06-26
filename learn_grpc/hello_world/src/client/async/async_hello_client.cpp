@@ -3,6 +3,7 @@
 #include "hello.grpc.pb.h"
 #include "logger.h"
 #include <functional>
+#include "client_event_opt.h"
 
 class SayHelloCall : public EventHandler
 {
@@ -96,7 +97,7 @@ void AsyncHelloClient::sayHello()
     call->responseReader->StartCall();
 
     Event event(key);
-    event.setOpt(EVENT_OPT::FINISH);
+    event.setOpt(CLIENT_EVENT_OPT::FINISH);
     // Request that, upon completion of the RPC, "reply" be updated with the
     // server's response; "status" with the indication of whether the operation
     // was successful. Tag the request with the memory address of the call
@@ -120,7 +121,7 @@ void AsyncHelloClient::sayHelloAgain()
     call->responseReader->StartCall();
 
     Event event(key);
-    event.setOpt(EVENT_OPT::FINISH);
+    event.setOpt(CLIENT_EVENT_OPT::FINISH);
     // Request that, upon completion of the RPC, "reply" be updated with the
     // server's response; "status" with the indication of whether the operation
     // was successful. Tag the request with the memory address of the call

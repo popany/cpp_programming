@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "semaphore.h"
 #include <functional>
+#include "client_event_opt.h"
 
 class GreetCall : public EventHandler
 {
@@ -60,7 +61,7 @@ void AsyncChatClient::greet()
     call->responseReader->StartCall();
 
     Event event(call->key);
-    event.setOpt(EVENT_OPT::FINISH);
+    event.setOpt(CLIENT_EVENT_OPT::FINISH);
     // Request that, upon completion of the RPC, "reply" be updated with the
     // server's response; "status" with the indication of whether the operation
     // was successful. Tag the request with the memory address of the call
@@ -96,10 +97,10 @@ public:
         }
 
         switch(event.getOpt()) {
-            case EVENT_OPT::START_CALL:
+            case CLIENT_EVENT_OPT::START_CALL:
             {
                 if (optOk) {
-                    event.setOpt(EVENT_OPT::READ);
+                    event.setOpt(CLIENT_EVENT_OPT::READ);
                     asyncReader->Read(&response, event.getToken());
                     LOG_DEBUG("start read, key({})", event.getKey());
                 }
@@ -109,7 +110,7 @@ public:
                 }
             }
             break;
-            case EVENT_OPT::READ:
+            case CLIENT_EVENT_OPT::READ:
             {
                 if (optOk) {
                     LOG_INFO("response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
@@ -117,12 +118,12 @@ public:
                 }
                 else {
                     LOG_DEBUG("read end, key({})", event.getKey());
-                    event.setOpt(EVENT_OPT::FINISH);
+                    event.setOpt(CLIENT_EVENT_OPT::FINISH);
                     asyncReader->Finish(&status, event.getToken());
                 }
             }
             break;
-            case EVENT_OPT::FINISH:
+            case CLIENT_EVENT_OPT::FINISH:
             {
                 if (optOk) {
                     if (status.ok()) {
@@ -150,7 +151,7 @@ public:
     void start()
     {
         Event event(key);
-        event.setOpt(EVENT_OPT::START_CALL);
+        event.setOpt(CLIENT_EVENT_OPT::START_CALL);
         asyncReader->StartCall(event.getToken());
     }
 };
@@ -198,7 +199,7 @@ public:
         }
 
         switch(event.getOpt()) {
-            case EVENT_OPT::START_CALL:
+            case CLIENT_EVENT_OPT::START_CALL:
             {
                 while (!canWrite.release()) {
                 }
@@ -210,7 +211,7 @@ public:
                 }
             }
             break;
-            case EVENT_OPT::WRITE:
+            case CLIENT_EVENT_OPT::WRITE:
             {
                 while (!canWrite.release()) {
                 }
@@ -220,7 +221,7 @@ public:
                 }
             }
             break;
-            case EVENT_OPT::WRITE_DONE:
+            case CLIENT_EVENT_OPT::WRITE_DONE:
             {
                 if (optOk) {
                     LOG_DEBUG("WritesDone ok, key({})", event.getKey());
@@ -231,7 +232,7 @@ public:
                 closed = true;
             }
             break;
-            case EVENT_OPT::FINISH:
+            case CLIENT_EVENT_OPT::FINISH:
             {
                 if (optOk) {
                     if (status.ok()) {
@@ -259,19 +260,19 @@ public:
     void start()
     {
         Event event(key);
-        event.setOpt(EVENT_OPT::START_CALL);
+        event.setOpt(CLIENT_EVENT_OPT::START_CALL);
 
         canWrite.acquire();
         asyncWriter->StartCall(event.getToken());
 
-        event.setOpt(EVENT_OPT::FINISH);
+        event.setOpt(CLIENT_EVENT_OPT::FINISH);
         asyncWriter->Finish(&status, event.getToken());
     }
 
     void write(const std::string& msg) override
     {
         Event event(key);
-        event.setOpt(EVENT_OPT::WRITE);
+        event.setOpt(CLIENT_EVENT_OPT::WRITE);
 
         ClientWords request;
         request.set_timestamp(utils::GetCurrentTimeString());
@@ -284,7 +285,7 @@ public:
     void close() override
     {
         Event event(key);
-        event.setOpt(EVENT_OPT::WRITE_DONE);
+        event.setOpt(CLIENT_EVENT_OPT::WRITE_DONE);
         canWrite.acquire();
         asyncWriter->WritesDone(event.getToken());
     }
@@ -334,10 +335,10 @@ public:
         }
 
         switch(event.getOpt()) {
-            case EVENT_OPT::START_CALL:
+            case CLIENT_EVENT_OPT::START_CALL:
             {
                 if (optOk) {
-                    event.setOpt(EVENT_OPT::READ);
+                    event.setOpt(CLIENT_EVENT_OPT::READ);
                     asyncReaderWriter->Read(&response, event.getToken());
                     LOG_DEBUG("StartCall ok, key({})", event.getKey());
                 }
@@ -350,7 +351,7 @@ public:
                 }
             }
             break;
-            case EVENT_OPT::READ:
+            case CLIENT_EVENT_OPT::READ:
             {
                 if (optOk) {
                     LOG_INFO("response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
@@ -358,12 +359,12 @@ public:
                 }
                 else {
                     LOG_DEBUG("read end, key({})", event.getKey());
-                    event.setOpt(EVENT_OPT::FINISH);
+                    event.setOpt(CLIENT_EVENT_OPT::FINISH);
                     asyncReaderWriter->Finish(&status, event.getToken());
                 }
             }
             break;
-            case EVENT_OPT::WRITE:
+            case CLIENT_EVENT_OPT::WRITE:
             {
                 while (!canWrite.release()) {
                 }
@@ -373,7 +374,7 @@ public:
                 }
             }
             break;
-            case EVENT_OPT::WRITE_DONE:
+            case CLIENT_EVENT_OPT::WRITE_DONE:
             {
                 if (optOk) {
                     LOG_DEBUG("WritesDone ok, key({})", event.getKey());
@@ -384,7 +385,7 @@ public:
                 closed = true;
             }
             break;
-            case EVENT_OPT::FINISH:
+            case CLIENT_EVENT_OPT::FINISH:
             {
                 if (optOk) {
                     if (status.ok()) {
@@ -412,7 +413,7 @@ public:
     void start()
     {
         Event event(key);
-        event.setOpt(EVENT_OPT::START_CALL);
+        event.setOpt(CLIENT_EVENT_OPT::START_CALL);
 
         canWrite.acquire();
         asyncReaderWriter->StartCall(event.getToken());
@@ -421,7 +422,7 @@ public:
     void write(const std::string& msg) override
     {
         Event event(key);
-        event.setOpt(EVENT_OPT::WRITE);
+        event.setOpt(CLIENT_EVENT_OPT::WRITE);
 
         ClientWords request;
         request.set_timestamp(utils::GetCurrentTimeString());
@@ -434,7 +435,7 @@ public:
     void close() override
     {
         Event event(key);
-        event.setOpt(EVENT_OPT::WRITE_DONE);
+        event.setOpt(CLIENT_EVENT_OPT::WRITE_DONE);
         canWrite.acquire();
         asyncReaderWriter->WritesDone(event.getToken());
     }

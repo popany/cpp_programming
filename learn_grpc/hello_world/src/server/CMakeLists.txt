@@ -1,4 +1,5 @@
 add_subdirectory(sync)
+add_subdirectory(async)
 
 set(server_srcs
     main.cpp)
@@ -9,7 +10,8 @@ add_executable(server
 target_link_libraries(server
     logger
     abstract_config
-    sync_server)
+    sync_server
+    async_server)
 
 install(TARGETS server
     RUNTIME

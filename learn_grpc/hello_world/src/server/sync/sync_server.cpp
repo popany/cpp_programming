@@ -6,17 +6,17 @@
 #include "logger.h"
 #include "../config/server_config.h"
 
-HelloService::Service& GetHelloService()
+static HelloService::Service& GetHelloService()
 {
     return HelloServiceImpl::getInstance();
 }
 
-GoodbyeService::Service& GetGoodbyeService()
+static GoodbyeService::Service& GetGoodbyeService()
 {
     return GoodbyeServiceImpl::getInstance();
 }
 
-ChatService::Service& GetChatService()
+static ChatService::Service& GetChatService()
 {
     return ChatServiceImpl::getInstance();
 }
