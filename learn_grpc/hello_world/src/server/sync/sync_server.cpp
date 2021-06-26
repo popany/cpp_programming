@@ -1,10 +1,10 @@
-#include "server.h"
+#include "sync_server.h"
 #include <grpcpp/grpcpp.h>
 #include "hello_service.h"
 #include "goodbye_service.h"
 #include "chat_service.h"
 #include "logger.h"
-#include "config/server_config.h"
+#include "../config/server_config.h"
 
 HelloService::Service& GetHelloService()
 {
@@ -21,19 +21,19 @@ ChatService::Service& GetChatService()
     return ChatServiceImpl::getInstance();
 }
 
-Server::Server()
+SyncServer::SyncServer()
 {}
 
-Server& Server::getInstance()
+SyncServer& SyncServer::getInstance()
 {
-    static Server instance;
+    static SyncServer instance;
     return instance;
 }
 
-void Server::start()
+void SyncServer::start()
 {
     std::string serverAddress = std::string("0.0.0.0:") + std::to_string(SERVER_CONFIG.GET_GRPC_SERVER_PORT());
-    LOG_INFO("Server listening on {}", serverAddress);
+    LOG_INFO("SyncServer listening on {}", serverAddress);
     grpc::ServerBuilder builder;
     builder.AddListeningPort(serverAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&GetHelloService());
@@ -43,10 +43,10 @@ void Server::start()
     grpcServer->Wait();
 }
 
-void Server::stop()
+void SyncServer::stop()
 {
     if (grpcServer) {
         grpcServer->Shutdown();
     }
-    LOG_INFO("Server stopped");
+    LOG_INFO("SyncServer stopped");
 }

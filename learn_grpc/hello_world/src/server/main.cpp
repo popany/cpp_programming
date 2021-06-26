@@ -1,4 +1,4 @@
-#include "server.h"
+#include "sync_server.h"
 #include "logger.h"
 #include "config/server_config.h"
 #include <signal.h>
@@ -9,7 +9,7 @@ void HandleSignal(int signum)
     if (signum == SIGINT || signum == SIGTERM) {
         std::thread t([=]() {
             LOG_INFO("signal({}) received", signum);
-            Server::getInstance().stop();
+            SyncServer::getInstance().stop();
         });
         t.detach();
     }
@@ -26,7 +26,7 @@ int main()
     InitLogger();
     SetLogLevel(SERVER_CONFIG.GET_LOG_LEVEL());
     RegisterSignalHandler();
-    Server::getInstance().start();
+    SyncServer::getInstance().start();
 
     return 0;
 }
