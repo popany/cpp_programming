@@ -62,3 +62,10 @@ void ServerProactor::demultiplex()
     }
 
 }
+
+void ServerProactor::shutdown()
+{
+    for (auto& cq : cqs) {
+        cq->Shutdown();
+    }
+}

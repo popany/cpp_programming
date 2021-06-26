@@ -38,7 +38,7 @@ public:
             {
                 new GoodbyeEventHandler(goodbyeService, cq, handlerManager);
                 if (optOk) {
-                    LOG_INFO("firstname: {}, lastname: {}", request.firstname(), request.lastname());
+                    LOG_INFO("SayGoodbye request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     GoodbyeResponse response;
                     response.set_greeting(std::string("Goodbye, ") + request.firstname() + " " + request.lastname());
                     event.setOpt(SERVER_EVENT_OPT::FINISH);
@@ -102,7 +102,7 @@ public:
             {
                 new GoodbyeAgainEventHandler(goodbyeService, cq, handlerManager);
                 if (optOk) {
-                    LOG_INFO("firstname: {}, lastname: {}", request.firstname(), request.lastname());
+                    LOG_INFO("SayGoodbyeAgain request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     GoodbyeResponse response;
                     response.set_greeting(std::string("Goodbye, ") + request.firstname() + " " + request.lastname());
                     event.setOpt(SERVER_EVENT_OPT::FINISH);

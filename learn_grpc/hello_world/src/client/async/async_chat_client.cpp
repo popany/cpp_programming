@@ -26,7 +26,7 @@ public:
     {
         if (optOk) {
             if (status.ok()) {
-                LOG_INFO("response: {} - \"{}\"", response.timestamp(), response.content());
+                LOG_INFO("Greet response: {} - \"{}\"", response.timestamp(), response.content());
             } else {
                 LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
             }
@@ -113,7 +113,7 @@ public:
             case CLIENT_EVENT_OPT::READ:
             {
                 if (optOk) {
-                    LOG_INFO("response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
+                    LOG_INFO("Listen response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
                     asyncReader->Read(&response, event.getToken());
                 }
                 else {
@@ -127,7 +127,7 @@ public:
             {
                 if (optOk) {
                     if (status.ok()) {
-                        LOG_INFO("end call, key({})", event.getKey());
+                        LOG_INFO("Listen end call, key({})", event.getKey());
                     } else {
                         LOG_ERROR("rpc failed, key({}), error_code({}), error_message: \"{}\"", event.getKey(), status.error_code(), status.error_message());
                     }
@@ -236,7 +236,7 @@ public:
             {
                 if (optOk) {
                     if (status.ok()) {
-                        LOG_INFO("Finish, key({}), response: {} - \"{}\"", event.getKey(), response.timestamp(), response.content());
+                        LOG_INFO("Speak Finish, key({}), response: {} - \"{}\"", event.getKey(), response.timestamp(), response.content());
                     } else {
                         LOG_ERROR("rpc failed, key({}), error_code({}), error_message: \"{}\"", event.getKey(), status.error_code(), status.error_message());
                     }
@@ -354,7 +354,7 @@ public:
             case CLIENT_EVENT_OPT::READ:
             {
                 if (optOk) {
-                    LOG_INFO("response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
+                    LOG_INFO("Talk response: {} - \"{}\", key({})", response.timestamp(), response.content(), event.getKey());
                     asyncReaderWriter->Read(&response, event.getToken());
                 }
                 else {
@@ -389,7 +389,7 @@ public:
             {
                 if (optOk) {
                     if (status.ok()) {
-                        LOG_INFO("Finish, key({}), response: {} - \"{}\"", event.getKey(), response.timestamp(), response.content());
+                        LOG_INFO("Talk Finish, key({}), response: {} - \"{}\"", event.getKey(), response.timestamp(), response.content());
                     } else {
                         LOG_ERROR("rpc failed, key({}), error_code({}), error_message: \"{}\"", event.getKey(), status.error_code(), status.error_message());
                     }

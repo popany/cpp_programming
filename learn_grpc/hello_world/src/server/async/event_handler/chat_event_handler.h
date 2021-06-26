@@ -39,7 +39,7 @@ public:
             {
                 new ChatGreetEventHandler(chatService, cq, handlerManager);
                 if (optOk) {
-                    LOG_INFO("request: {} - \"{}\"", request.timestamp(), request.content());
+                    LOG_INFO("Greet request: {} - \"{}\"", request.timestamp(), request.content());
                     ServerWords response;
                     response.set_timestamp(utils::GetCurrentTimeString());
                     response.set_content("Me too!");

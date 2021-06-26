@@ -38,7 +38,7 @@ public:
             {
                 new HelloEventHandler(helloService, cq, handlerManager);
                 if (optOk) {
-                    LOG_INFO("firstname: {}, lastname: {}", request.firstname(), request.lastname());
+                    LOG_INFO("SayHello request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     HelloResponse response;
                     response.set_greeting(std::string("Hello, ") + request.firstname() + " " + request.lastname());
                     event.setOpt(SERVER_EVENT_OPT::FINISH);
@@ -102,7 +102,7 @@ public:
             {
                 new HelloAgainEventHandler(helloService, cq, handlerManager);
                 if (optOk) {
-                    LOG_INFO("firstname: {}, lastname: {}", request.firstname(), request.lastname());
+                    LOG_INFO("SayHelloAgain request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     HelloResponse response;
                     response.set_greeting(std::string("Hello, ") + request.firstname() + " " + request.lastname());
                     event.setOpt(SERVER_EVENT_OPT::FINISH);

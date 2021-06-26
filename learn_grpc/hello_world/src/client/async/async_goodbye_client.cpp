@@ -23,7 +23,7 @@ public:
     {
         if (optOk) {
             if (status.ok()) {
-                LOG_INFO("response: \"{}\"", response.greeting());
+                LOG_INFO("SayGoodbye response: \"{}\"", response.greeting());
             } else {
                 LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
             }
@@ -57,7 +57,7 @@ public:
     {
         if (optOk) {
             if (status.ok()) {
-                LOG_INFO("response: \"{}\"", response.greeting());
+                LOG_INFO("SayGoodbyeAgain response: \"{}\"", response.greeting());
             } else {
                 LOG_ERROR("rpc failed, error_code({}), error_message: \"{}\"", status.error_code(), status.error_message());
             }

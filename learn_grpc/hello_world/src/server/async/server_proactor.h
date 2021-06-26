@@ -48,5 +48,7 @@ public:
         cqs.emplace_back(std::move(cq));
     }
 
+    void shutdown();
+
     static ServerProactor& getInstance();
 };
