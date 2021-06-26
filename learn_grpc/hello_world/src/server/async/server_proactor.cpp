@@ -6,7 +6,8 @@
 
 ServerProactor::ServerProactor(int threadPoolSize) :
     Proactor(threadPoolSize),
-    cqIdx(0)
+    cqIdx(0),
+    stopped(false)
 {
     cqs.reserve(threadPoolSize);
 }
@@ -35,7 +36,6 @@ void ServerProactor::demultiplex()
 
         if (nextStatus == grpc::CompletionQueue::NextStatus::SHUTDOWN) {
             LOG_INFO("cq shutdown, remaining eventHandler count: {}, keys: {}", handlerManager.count(), handlerManager.getKeys());
-            handlerManager.clear();
             return;
         }
         if (nextStatus == grpc::CompletionQueue::NextStatus::TIMEOUT) {
@@ -53,11 +53,16 @@ void ServerProactor::demultiplex()
             continue;
         }
 
-        auto handler = handlerManager.get(event.getKey());
-        handler->process(ok, event);
+        if (stopped) {
+            LOG_INFO("stopped, ignore key{}", event.getKey());
+        }
+        else { 
+            auto handler = handlerManager.get(event.getKey());
+            handler->process(ok, event);
 
-        if (handler->isComplete()) {
-            handlerManager.remove(event.getKey());
+            if (handler->isComplete()) {
+                handlerManager.remove(event.getKey());
+            }
         }
     }
 
@@ -65,6 +70,7 @@ void ServerProactor::demultiplex()
 
 void ServerProactor::shutdown()
 {
+    stopped = true;
     for (auto& cq : cqs) {
         cq->Shutdown();
     }

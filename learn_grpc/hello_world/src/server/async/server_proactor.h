@@ -15,6 +15,7 @@ class ServerProactor : public Proactor
     HelloService::AsyncService helloService;
     GoodbyeService::AsyncService goodbyeService;
     ChatService::AsyncService chatService;
+    std::atomic_bool stopped;
 
     ServerProactor(int threadPoolSize);
     void demultiplex() override;
