@@ -1,3 +1,5 @@
+add_subdirectory(sync)
+
 set(server_srcs
     server.cpp
     main.cpp)
@@ -8,9 +10,9 @@ add_executable(server
 target_link_libraries(server
     logger
     abstract_config
-    chat_service
-    goodbye_service
-    hello_service)
+    sync_chat_service
+    sync_goodbye_service
+    sync_hello_service)
 
 install(TARGETS server
     RUNTIME
