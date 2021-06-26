@@ -9,7 +9,11 @@ void HandleSignal(int signum)
     if (signum == SIGINT || signum == SIGTERM) {
         std::thread t([=]() {
             LOG_INFO("signal({}) received", signum);
-            SyncServer::getInstance().stop();
+            if (SERVER_CONFIG.GET_GRPC_SERVER_ASYNC()) {
+            }
+            else {
+                SyncServer::getInstance().stop();
+            }
         });
         t.detach();
     }
@@ -26,7 +30,12 @@ int main()
     InitLogger();
     SetLogLevel(SERVER_CONFIG.GET_LOG_LEVEL());
     RegisterSignalHandler();
-    SyncServer::getInstance().start();
+
+    if (SERVER_CONFIG.GET_GRPC_SERVER_ASYNC()) {
+    }
+    else {
+        SyncServer::getInstance().start();
+    }
 
     return 0;
 }
