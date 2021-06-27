@@ -25,3 +25,13 @@
 
 ### Win32
 
+    md .build
+    cd .build
+
+    pushd
+    Launch-VsDevShell.ps1
+    popd
+
+    cmake .. -G "Visual Studio 16 2019" -A x64 -T v140 -DCMAKE_PREFIX_PATH=C:/local/grpc
+
+    cmake --build . --config Debug -j
