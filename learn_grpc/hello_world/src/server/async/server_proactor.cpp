@@ -40,6 +40,8 @@ void ServerProactor::demultiplex()
     new GoodbyeEventHandler(&goodbyeService, cq, &handlerManager);
     new GoodbyeAgainEventHandler(&goodbyeService, cq, &handlerManager);
     new ChatGreetEventHandler(&chatService, cq, &handlerManager);
+    new ChatListenEventHandler(&chatService, cq, &handlerManager);
+    new ChatSpeakEventHandler(&chatService, cq, &handlerManager);
     
     void* token;
     bool ok = false;
