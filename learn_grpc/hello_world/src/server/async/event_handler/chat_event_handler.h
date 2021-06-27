@@ -284,7 +284,7 @@ public:
                 }
                 else {
                     LOG_ERROR("Talk receive operation not ok, key({})", event.getKey());
-                    asyncReaderWriter.Finish(grpc::Status::CANCELLED, event.getToken());
+                    finish = true;
                 }
             }
             break;

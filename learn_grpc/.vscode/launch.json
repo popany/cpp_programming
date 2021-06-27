@@ -43,6 +43,27 @@
                 }
             ],
             "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "hello_world server core",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/hello_world/bin/server",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/hello_world/bin",
+            "environment": [{"name": "LD_LIBRARY_PATH", "value": "/usr1/grpc-debug/lib:/usr1/grpc-debug/lib64:"}],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "coreDumpPath": "${workspaceFolder}/hello_world/bin/core"
         }
  
     ]
