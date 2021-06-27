@@ -73,6 +73,12 @@ public:
         requestFunc(event.getToken());
     }
 
+    void stop()
+    {
+        LOG_INFO("stop");
+        stopped = true;
+    }
+
     void shutdown();
 
     static ServerProactor& getInstance();
