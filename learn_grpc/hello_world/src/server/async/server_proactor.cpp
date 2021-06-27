@@ -55,7 +55,6 @@ void ServerProactor::demultiplex()
             return;
         }
         if (nextStatus == grpc::CompletionQueue::NextStatus::TIMEOUT) {
-            LOG_DEBUG("Timeout, handlerManager count: {}, keys: {}", handlerManager.count(), handlerManager.getKeys());
             if (handlerManager.count()) {
                 continue;
             }

@@ -278,19 +278,20 @@ public:
             {
                 new ChatListenEventHandler(chatService, cq, handlerManager);
                 if (optOk) {
+                    LOG_DEBUG("Talk recieve, key({})", event.getKey());
                     event.setOpt(SERVER_EVENT_OPT::READ);
                     asyncReaderWriter.Read(&request, event.getToken());
                 }
                 else {
-                    LOG_ERROR("Receive operation not ok");
-                    finish = true;
+                    LOG_ERROR("Talk receive operation not ok, key({})", event.getKey());
+                    asyncReaderWriter.Finish(grpc::Status::CANCELLED, event.getToken());
                 }
             }
             break;
             case SERVER_EVENT_OPT::READ:
             {
                 if (optOk) {
-                    LOG_INFO("Talk request: {} - \"{}\"", request.timestamp(), request.content());
+                    LOG_INFO("Talk request: {} - \"{}\", key({})", request.timestamp(), request.content(), event.getKey());
 
                     ServerWords response;
                     response.set_timestamp(utils::GetCurrentTimeString());
@@ -299,6 +300,7 @@ public:
                     asyncReaderWriter.Write(response, event.getToken());
                 }
                 else {
+                    LOG_INFO("Talk read end, key({})", event.getKey());
                     event.setOpt(SERVER_EVENT_OPT::FINISH);
                     asyncReaderWriter.Finish(grpc::Status::OK, event.getToken());
                 }
@@ -307,17 +309,19 @@ public:
             case SERVER_EVENT_OPT::WRITE:
             {
                 if (optOk) {
+                    LOG_DEBUG("Talk write, key({})", event.getKey());
                     event.setOpt(SERVER_EVENT_OPT::READ);
                     asyncReaderWriter.Read(&request, event.getToken());
                 }
                 else {
-                    LOG_ERROR("Write operation not ok");
-                    finish = true;
+                    LOG_ERROR("Talk write operation not ok, key({})", event.getKey());
+                    asyncReaderWriter.Finish(grpc::Status::CANCELLED, event.getToken());
                 }
             }
             break;
             case SERVER_EVENT_OPT::FINISH:
             {
+                LOG_DEBUG("Talk finish, key({})", event.getKey());
                 if (!optOk) {
                     LOG_ERROR("Finish operation not ok, key({})", event.getKey());
                 }
@@ -326,6 +330,7 @@ public:
             break;
             default:
                 LOG_ERROR("unexpected routine, key({}), opt({})", event.getKey(), event.getOpt());
+                finish = true;
         }
     }
 
