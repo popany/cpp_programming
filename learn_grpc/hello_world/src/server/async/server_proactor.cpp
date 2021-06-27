@@ -5,7 +5,8 @@
 #include "event_handler/hello_event_handler.h"
 
 ServerProactor::ServerProactor(int threadPoolSize) :
-    Proactor(threadPoolSize),
+    threadPoolSize(threadPoolSize),
+    threadPool(threadPoolSize),
     cqIdx(0),
     stopped(false)
 {
@@ -16,6 +17,18 @@ ServerProactor& ServerProactor::getInstance()
 {
     static ServerProactor instance(SERVER_CONFIG.GET_GRPC_SERVER_ASYNC_THREADPOOL_SIZE());
     return instance;
+}
+
+void ServerProactor::startDemuxer()
+{
+    for (int i = 0; i < threadPoolSize; i++) {
+        boost::asio::post(threadPool, std::bind(&ServerProactor::demultiplex, this));
+    }
+}
+
+void ServerProactor::waitForComplete()
+{
+    threadPool.join();
 }
 
 void ServerProactor::demultiplex()

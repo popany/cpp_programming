@@ -7,9 +7,17 @@
 #include "goodbye.grpc.pb.h"
 #include "chat.grpc.pb.h"
 #include <atomic>
+#include "event_handler_manager.h"
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/post.hpp>
+#include <vector>
 
-class ServerProactor : public Proactor
+class ServerProactor
 {
+    boost::asio::thread_pool threadPool;
+    int threadPoolSize;
+    EventHandlerManager handlerManager;
+
     std::vector<std::unique_ptr<grpc::ServerCompletionQueue>> cqs;
     std::atomic_int cqIdx;
     HelloService::AsyncService helloService;
@@ -18,11 +26,14 @@ class ServerProactor : public Proactor
     std::atomic_bool stopped;
 
     ServerProactor(int threadPoolSize);
-    void demultiplex() override;
+    void demultiplex();
 
 public:
     ServerProactor(const ServerProactor&) = delete;
     void operator=(const ServerProactor&) = delete;
+
+    void startDemuxer();
+    void waitForComplete();
 
     int getThreadPoolSize()
     {
