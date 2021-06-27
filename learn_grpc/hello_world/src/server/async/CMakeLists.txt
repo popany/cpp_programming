@@ -10,7 +10,7 @@ target_link_libraries(async_server
     utils
     abstract_config
     grpc_protos
-    proactor)
+    event)
 
 target_include_directories(async_server
     PUBLIC

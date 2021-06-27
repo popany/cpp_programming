@@ -1,7 +1,6 @@
 #pragma once
 
 #include <grpcpp/grpcpp.h>
-#include "proactor.h"
 #include <memory>
 #include "hello.grpc.pb.h"
 #include "goodbye.grpc.pb.h"
