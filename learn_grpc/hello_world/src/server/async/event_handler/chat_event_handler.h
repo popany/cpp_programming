@@ -245,3 +245,93 @@ public:
     }
 
 };
+
+class ChatTalkEventHandler : public EventHandler
+{
+    ChatService::AsyncService *chatService;
+    grpc::ServerCompletionQueue *cq;
+    EventHandlerManager *handlerManager;
+    grpc::ServerAsyncReaderWriter<ServerWords, ClientWords> asyncReaderWriter;
+    grpc::ServerContext context;
+
+    ClientWords request;
+
+    bool finish;
+    
+public:
+    ChatTalkEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+        chatService(chatService),
+        cq(cq),
+        handlerManager(handlerManager),
+        asyncReaderWriter(&context),
+        finish(false)
+    {
+        Event event = handlerManager->add(std::shared_ptr<ChatTalkEventHandler>(this));
+        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
+        chatService->Requesttalk(&context, &asyncReaderWriter, cq, cq, event.getToken());
+    }
+
+    void process(bool optOk, Event event) override 
+    {
+        switch(event.getOpt()) {
+            case SERVER_EVENT_OPT::RECEIVE:
+            {
+                new ChatListenEventHandler(chatService, cq, handlerManager);
+                if (optOk) {
+                    event.setOpt(SERVER_EVENT_OPT::READ);
+                    asyncReaderWriter.Read(&request, event.getToken());
+                }
+                else {
+                    LOG_ERROR("Receive operation not ok");
+                    finish = true;
+                }
+            }
+            break;
+            case SERVER_EVENT_OPT::READ:
+            {
+                if (optOk) {
+                    LOG_INFO("Talk request: {} - \"{}\"", request.timestamp(), request.content());
+
+                    ServerWords response;
+                    response.set_timestamp(utils::GetCurrentTimeString());
+                    response.set_content(request.content());
+                    event.setOpt(SERVER_EVENT_OPT::WRITE);
+                    asyncReaderWriter.Write(response, event.getToken());
+                }
+                else {
+                    event.setOpt(SERVER_EVENT_OPT::FINISH);
+                    asyncReaderWriter.Finish(grpc::Status::OK, event.getToken());
+                }
+            }
+            break;
+            case SERVER_EVENT_OPT::WRITE:
+            {
+                if (optOk) {
+                    event.setOpt(SERVER_EVENT_OPT::READ);
+                    asyncReaderWriter.Read(&request, event.getToken());
+                }
+                else {
+                    LOG_ERROR("Write operation not ok");
+                    finish = true;
+                }
+            }
+            break;
+            case SERVER_EVENT_OPT::FINISH:
+            {
+                if (!optOk) {
+                    LOG_ERROR("Finish operation not ok, key({})", event.getKey());
+                }
+                finish = true;
+            }
+            break;
+            default:
+                LOG_ERROR("unexpected routine, key({}), opt({})", event.getKey(), event.getOpt());
+        }
+    }
+
+    bool isComplete() override
+    {
+        return finish;
+    }
+
+};
