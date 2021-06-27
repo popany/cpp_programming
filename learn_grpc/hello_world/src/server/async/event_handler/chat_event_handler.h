@@ -276,7 +276,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new ChatListenEventHandler(chatService, cq, handlerManager);
+                new ChatTalkEventHandler(chatService, cq, handlerManager);
                 if (optOk) {
                     LOG_DEBUG("Talk recieve, key({})", event.getKey());
                     event.setOpt(SERVER_EVENT_OPT::READ);
