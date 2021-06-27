@@ -35,9 +35,10 @@ void AsyncServer::start()
 
 void AsyncServer::stop()
 {
+    LOG_INFO("Stop AsyncServer");
     if (grpcServer) {
         grpcServer->Shutdown();
     }
     ServerProactor::getInstance().shutdown();
-    LOG_INFO("SyncServer stopped");
+    LOG_INFO("AsyncServer stopped");
 }

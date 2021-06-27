@@ -11,6 +11,7 @@
 #include <boost/asio/post.hpp>
 #include <vector>
 #include "event_handler/server_event_opt.h"
+#include "logger.h"
 
 class ServerProactor
 {
@@ -64,6 +65,7 @@ public:
     void registerHandler(F requestFunc, std::shared_ptr<EventHandler> handler) 
     {
         if (stopped) {
+            LOG_INFO("stopped");
             return;
         }
         Event event = handlerManager.add(handler);

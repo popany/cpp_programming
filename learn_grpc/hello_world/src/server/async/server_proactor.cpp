@@ -81,6 +81,7 @@ void ServerProactor::demultiplex()
 
 void ServerProactor::shutdown()
 {
+    LOG_INFO("shutdown");
     stopped = true;
     for (auto& cq : cqs) {
         cq->Shutdown();
