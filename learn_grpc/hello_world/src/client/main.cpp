@@ -68,7 +68,7 @@ void UseAsyncClient(const std::string& serverAddress)
 
 int main()
 {
-    InitLogger();
+    InitLogger("client.log");
     SetLogLevel(CLIENT_CONFIG.GET_LOG_LEVEL());
 
     std::string serverAddress = std::string("0.0.0.0:") + std::to_string(CLIENT_CONFIG.GET_GRPC_SERVER_PORT());

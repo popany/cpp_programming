@@ -19,5 +19,5 @@ enum LogLevel
     ERROR = 4,
 };
 
-void InitLogger();
+void InitLogger(std::string logPath);
 void SetLogLevel(LogLevel);

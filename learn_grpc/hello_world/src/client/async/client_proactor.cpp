@@ -26,7 +26,7 @@ void ClientProactor::asyncCompleteRpc(grpc::CompletionQueue& cq)
             return;
         }
         if (nextStatus == grpc::CompletionQueue::NextStatus::TIMEOUT) {
-            LOG_DEBUG("handlerManager count: {}, keys: {}", handlerManager.count(), handlerManager.getKeys());
+            LOG_DEBUG("Timeout, handlerManager count: {}, keys: {}", handlerManager.count(), handlerManager.getKeys());
             if (handlerManager.count()) {
                 continue;
             }

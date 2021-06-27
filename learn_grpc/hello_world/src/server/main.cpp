@@ -29,7 +29,7 @@ void RegisterSignalHandler()
 
 int main()
 {
-    InitLogger();
+    InitLogger("./server.log");
     SetLogLevel(SERVER_CONFIG.GET_LOG_LEVEL());
     RegisterSignalHandler();
 
