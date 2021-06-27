@@ -35,14 +35,14 @@ void ServerProactor::demultiplex()
 {
     grpc::ServerCompletionQueue* cq = cqs[cqIdx++].get();
 
-    new HelloEventHandler(&helloService, cq, &handlerManager);
-    new HelloAgainEventHandler(&helloService, cq, &handlerManager);
-    new GoodbyeEventHandler(&goodbyeService, cq, &handlerManager);
-    new GoodbyeAgainEventHandler(&goodbyeService, cq, &handlerManager);
-    new ChatGreetEventHandler(&chatService, cq, &handlerManager);
-    new ChatListenEventHandler(&chatService, cq, &handlerManager);
-    new ChatSpeakEventHandler(&chatService, cq, &handlerManager);
-    new ChatTalkEventHandler(&chatService, cq, &handlerManager);
+    new HelloEventHandler(&helloService, cq);
+    new HelloAgainEventHandler(&helloService, cq);
+    new GoodbyeEventHandler(&goodbyeService, cq);
+    new GoodbyeAgainEventHandler(&goodbyeService, cq);
+    new ChatGreetEventHandler(&chatService, cq);
+    new ChatListenEventHandler(&chatService, cq);
+    new ChatSpeakEventHandler(&chatService, cq);
+    new ChatTalkEventHandler(&chatService, cq);
     
     void* token;
     bool ok = false;
@@ -62,22 +62,18 @@ void ServerProactor::demultiplex()
                 break;
             }
         }
+
         Event event(token);
         if (!handlerManager.contains(event.getKey())) {
             LOG_WARN("event key({}) not exist", event.getKey());
             continue;
         }
 
-        if (stopped) {
-            LOG_INFO("stopped, ignore key{}", event.getKey());
-        }
-        else { 
-            auto handler = handlerManager.get(event.getKey());
-            handler->process(ok, event);
+        auto handler = handlerManager.get(event.getKey());
+        handler->process(ok, event);
 
-            if (handler->isComplete()) {
-                handlerManager.remove(event.getKey());
-            }
+        if (handler->isComplete()) {
+            handlerManager.remove(event.getKey());
         }
     }
 

@@ -10,25 +10,26 @@ class HelloEventHandler : public EventHandler
 {
     HelloService::AsyncService *helloService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
 
     grpc::ServerContext context;
     grpc::ServerAsyncResponseWriter<HelloResponse> asyncWriter;
     HelloRequest request;
 
     bool finish;
+
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&HelloService::AsyncService::RequestsayHello, helloService, &context, &request, &asyncWriter, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
     
 public:
-    HelloEventHandler(HelloService::AsyncService *helloService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    HelloEventHandler(HelloService::AsyncService *helloService, grpc::ServerCompletionQueue *cq) :
         helloService(helloService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncWriter(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<HelloEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        helloService->RequestsayHello(&context, &request, &asyncWriter, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -36,7 +37,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new HelloEventHandler(helloService, cq, handlerManager);
+                new HelloEventHandler(helloService, cq);
                 if (optOk) {
                     LOG_INFO("SayHello request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     HelloResponse response;
@@ -45,7 +46,7 @@ public:
                     asyncWriter.Finish(response, grpc::Status::OK, event.getToken());
                 }
                 else {
-                    LOG_ERROR("operation not ok");
+                    LOG_ERROR("Receive operation not ok");
                     finish = true;
                 }
             }
@@ -74,7 +75,6 @@ class HelloAgainEventHandler : public EventHandler
 {
     HelloService::AsyncService *helloService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
 
     grpc::ServerContext context;
     grpc::ServerAsyncResponseWriter<HelloResponse> asyncWriter;
@@ -82,17 +82,19 @@ class HelloAgainEventHandler : public EventHandler
     
     bool finish;
 
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&HelloService::AsyncService::RequestsayHelloAgain, helloService, &context, &request, &asyncWriter, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
+
 public:
-    HelloAgainEventHandler(HelloService::AsyncService *helloService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    HelloAgainEventHandler(HelloService::AsyncService *helloService, grpc::ServerCompletionQueue *cq) :
         helloService(helloService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncWriter(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<HelloAgainEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        helloService->RequestsayHelloAgain(&context, &request, &asyncWriter, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -100,7 +102,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new HelloAgainEventHandler(helloService, cq, handlerManager);
+                new HelloAgainEventHandler(helloService, cq);
                 if (optOk) {
                     LOG_INFO("SayHelloAgain request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     HelloResponse response;
@@ -109,7 +111,7 @@ public:
                     asyncWriter.Finish(response, grpc::Status::OK, event.getToken());
                 }
                 else {
-                    LOG_ERROR("operation not ok");
+                    LOG_ERROR("Receive operation not ok");
                     finish = true;
                 }
             }

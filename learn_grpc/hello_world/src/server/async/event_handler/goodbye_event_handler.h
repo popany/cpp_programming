@@ -10,25 +10,26 @@ class GoodbyeEventHandler : public EventHandler
 {
     GoodbyeService::AsyncService *goodbyeService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
 
     grpc::ServerContext context;
     grpc::ServerAsyncResponseWriter<GoodbyeResponse> asyncWriter;
     GoodbyeRequest request;
 
     bool finish;
+
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&GoodbyeService::AsyncService::RequestsayGoodbye, goodbyeService, &context, &request, &asyncWriter, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
     
 public:
-    GoodbyeEventHandler(GoodbyeService::AsyncService *goodbyeService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    GoodbyeEventHandler(GoodbyeService::AsyncService *goodbyeService, grpc::ServerCompletionQueue *cq) :
         goodbyeService(goodbyeService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncWriter(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<GoodbyeEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        goodbyeService->RequestsayGoodbye(&context, &request, &asyncWriter, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -36,7 +37,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new GoodbyeEventHandler(goodbyeService, cq, handlerManager);
+                new GoodbyeEventHandler(goodbyeService, cq);
                 if (optOk) {
                     LOG_INFO("SayGoodbye request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     GoodbyeResponse response;
@@ -45,7 +46,7 @@ public:
                     asyncWriter.Finish(response, grpc::Status::OK, event.getToken());
                 }
                 else {
-                    LOG_ERROR("operation not ok");
+                    LOG_ERROR("Receive operation not ok");
                     finish = true;
                 }
             }
@@ -74,7 +75,6 @@ class GoodbyeAgainEventHandler : public EventHandler
 {
     GoodbyeService::AsyncService *goodbyeService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
 
     grpc::ServerContext context;
     grpc::ServerAsyncResponseWriter<GoodbyeResponse> asyncWriter;
@@ -82,17 +82,19 @@ class GoodbyeAgainEventHandler : public EventHandler
     
     bool finish;
 
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&GoodbyeService::AsyncService::RequestsayGoodbyeAgain, goodbyeService, &context, &request, &asyncWriter, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
+
 public:
-    GoodbyeAgainEventHandler(GoodbyeService::AsyncService *goodbyeService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    GoodbyeAgainEventHandler(GoodbyeService::AsyncService *goodbyeService, grpc::ServerCompletionQueue *cq) :
         goodbyeService(goodbyeService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncWriter(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<GoodbyeAgainEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        goodbyeService->RequestsayGoodbyeAgain(&context, &request, &asyncWriter, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -100,7 +102,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new GoodbyeAgainEventHandler(goodbyeService, cq, handlerManager);
+                new GoodbyeAgainEventHandler(goodbyeService, cq);
                 if (optOk) {
                     LOG_INFO("SayGoodbyeAgain request, firstname: {}, lastname: {}", request.firstname(), request.lastname());
                     GoodbyeResponse response;
@@ -109,7 +111,7 @@ public:
                     asyncWriter.Finish(response, grpc::Status::OK, event.getToken());
                 }
                 else {
-                    LOG_ERROR("operation not ok");
+                    LOG_ERROR("Receive operation not ok");
                     finish = true;
                 }
             }

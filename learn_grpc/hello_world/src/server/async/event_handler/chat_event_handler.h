@@ -7,30 +7,32 @@
 #include "server_event_opt.h"
 #include "utils.h"
 #include <queue>
+#include <memory>
 
 class ChatGreetEventHandler : public EventHandler
 {
     ChatService::AsyncService *chatService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
     grpc::ServerAsyncResponseWriter<ServerWords> asyncWriter;
     grpc::ServerContext context;
 
     ClientWords request;
 
     bool finish;
+
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&ChatService::AsyncService::Requestgreet, chatService, &context, &request, &asyncWriter, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
     
 public:
-    ChatGreetEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    ChatGreetEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq) :
         chatService(chatService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncWriter(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<ChatGreetEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        chatService->Requestgreet(&context, &request, &asyncWriter, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -38,7 +40,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new ChatGreetEventHandler(chatService, cq, handlerManager);
+                new ChatGreetEventHandler(chatService, cq);
                 if (optOk) {
                     LOG_INFO("Greet request: {} - \"{}\"", request.timestamp(), request.content());
                     ServerWords response;
@@ -77,7 +79,6 @@ class ChatListenEventHandler : public EventHandler
 {
     ChatService::AsyncService *chatService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
     grpc::ServerAsyncWriter<ServerWords> asyncWriter;
     grpc::ServerContext context;
 
@@ -86,18 +87,20 @@ class ChatListenEventHandler : public EventHandler
     std::queue<ServerWords> responses;
 
     bool finish;
+
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&ChatService::AsyncService::Requestlisten, chatService, &context, &request, &asyncWriter, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
     
 public:
-    ChatListenEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    ChatListenEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq) :
         chatService(chatService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncWriter(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<ChatListenEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        chatService->Requestlisten(&context, &request, &asyncWriter, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -105,7 +108,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new ChatListenEventHandler(chatService, cq, handlerManager);
+                new ChatListenEventHandler(chatService, cq);
                 if (optOk) {
                     LOG_INFO("Listen request: {} - \"{}\"", request.timestamp(), request.content());
                     ServerWords response;
@@ -174,25 +177,26 @@ class ChatSpeakEventHandler : public EventHandler
 {
     ChatService::AsyncService *chatService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
     grpc::ServerAsyncReader<ServerWords, ClientWords> asyncReader;
     grpc::ServerContext context;
 
     ClientWords request;
 
     bool finish;
+
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&ChatService::AsyncService::Requestspeak, chatService, &context, &asyncReader, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
     
 public:
-    ChatSpeakEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    ChatSpeakEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq) :
         chatService(chatService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncReader(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<ChatSpeakEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        chatService->Requestspeak(&context, &asyncReader, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -200,7 +204,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new ChatSpeakEventHandler(chatService, cq, handlerManager);
+                new ChatSpeakEventHandler(chatService, cq);
                 if (optOk) {
                     event.setOpt(SERVER_EVENT_OPT::READ);
                     asyncReader.Read(&request, event.getToken());
@@ -250,25 +254,26 @@ class ChatTalkEventHandler : public EventHandler
 {
     ChatService::AsyncService *chatService;
     grpc::ServerCompletionQueue *cq;
-    EventHandlerManager *handlerManager;
     grpc::ServerAsyncReaderWriter<ServerWords, ClientWords> asyncReaderWriter;
     grpc::ServerContext context;
 
     ClientWords request;
 
     bool finish;
+
+    void registerHandler()
+    {
+        ServerProactor::getInstance().registerHandler(std::bind(&ChatService::AsyncService::Requesttalk, chatService, &context, &asyncReaderWriter, cq, cq, std::placeholders::_1), std::shared_ptr<EventHandler>(this));
+    }
     
 public:
-    ChatTalkEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq, EventHandlerManager *handlerManager) :
+    ChatTalkEventHandler(ChatService::AsyncService *chatService, grpc::ServerCompletionQueue *cq) :
         chatService(chatService),
         cq(cq),
-        handlerManager(handlerManager),
         asyncReaderWriter(&context),
         finish(false)
     {
-        Event event = handlerManager->add(std::shared_ptr<ChatTalkEventHandler>(this));
-        event.setOpt(SERVER_EVENT_OPT::RECEIVE);
-        chatService->Requesttalk(&context, &asyncReaderWriter, cq, cq, event.getToken());
+        registerHandler();
     }
 
     void process(bool optOk, Event event) override 
@@ -276,7 +281,7 @@ public:
         switch(event.getOpt()) {
             case SERVER_EVENT_OPT::RECEIVE:
             {
-                new ChatTalkEventHandler(chatService, cq, handlerManager);
+                new ChatTalkEventHandler(chatService, cq);
                 if (optOk) {
                     LOG_DEBUG("Talk recieve, key({})", event.getKey());
                     event.setOpt(SERVER_EVENT_OPT::READ);
