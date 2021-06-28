@@ -18,18 +18,18 @@ std::string GetCurrentTimeString(const std::string& fmt)
 LogLevel ParseLogLevel(std::string logLevel)
 {
     if (logLevel == "DEBUG") {
-        return LogLevel::DEBUG;
+        return LogLevel::LOG_DEBUG;
     }
     if (logLevel == "INFO") {
-        return LogLevel::INFO;
+        return LogLevel::LOG_INFO;
     }
     if (logLevel == "WARN") {
-        return LogLevel::WARN;
+        return LogLevel::LOG_WARN;
     }
     if (logLevel == "ERROR") {
-        return LogLevel::ERROR;
+        return LogLevel::LOG_ERROR;
     }
-    return LogLevel::INFO;
+    return LogLevel::LOG_INFO;
 }
 
 bool StringToBool(const std::string& s)

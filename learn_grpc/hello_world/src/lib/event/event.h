@@ -44,4 +44,4 @@ public:
     }
 };
 
-static_assert(sizeof(Event) <= sizeof(void*));
+static_assert(sizeof(Event) <= sizeof(void*), "sizeof(Event) > sizeof(void*)");

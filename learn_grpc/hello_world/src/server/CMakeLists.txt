@@ -7,11 +7,19 @@ set(server_srcs
 add_executable(server
     ${server_srcs})
 
+set(Boost_USE_STATIC_LIBS ON) # only find static libs
+set(Boost_USE_DEBUG_LIBS OFF) # ignore debug libs and 
+set(Boost_USE_RELEASE_LIBS ON) # only find release libs 
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF) 
+find_package(Boost 1.66.0 REQUIRED COMPONENTS date_time)
+
 target_link_libraries(server
     logger
     abstract_config
     sync_server
-    async_server)
+    async_server
+    Boost::date_time)
 
 install(TARGETS server
     RUNTIME

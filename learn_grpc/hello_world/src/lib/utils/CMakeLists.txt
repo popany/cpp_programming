@@ -11,12 +11,11 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.66.0 REQUIRED COMPONENTS date_time)
 
 target_link_libraries(utils
-    PRIVATE
+    PUBLIC
         Boost::date_time
         logger)
 
 target_include_directories(utils
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-    PRIVATE
         ${Boost_INCLUDE_DIRS})

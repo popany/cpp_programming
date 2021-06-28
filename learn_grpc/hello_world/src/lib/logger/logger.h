@@ -13,10 +13,10 @@
 
 enum LogLevel 
 {
-    DEBUG = 1,
-    INFO = 2,
-    WARN = 3,
-    ERROR = 4,
+    LOG_DEBUG = 1,
+    LOG_INFO = 2,
+    LOG_WARN = 3,
+    LOG_ERROR = 4,
 };
 
 void InitLogger(std::string logPath);

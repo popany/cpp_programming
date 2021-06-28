@@ -16,16 +16,16 @@ void InitLogger(std::string logPath)
 void SetLogLevel(LogLevel logLevel)
 {
     switch (logLevel) {
-        case LogLevel::DEBUG:
+        case LogLevel::LOG_DEBUG:
             spdlog::set_level(spdlog::level::debug);
             break;
-        case LogLevel::INFO:
+        case LogLevel::LOG_INFO:
             spdlog::set_level(spdlog::level::info);
             break;
-        case LogLevel::WARN:
+        case LogLevel::LOG_WARN:
             spdlog::set_level(spdlog::level::warn);
             break;
-        case LogLevel::ERROR:
+        case LogLevel::LOG_ERROR:
             spdlog::set_level(spdlog::level::err);
             break;
         default:
