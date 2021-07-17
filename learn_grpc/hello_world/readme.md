@@ -26,6 +26,27 @@ Grpc Version: 1.34.0
 
     make install
 
+Grpc Version: 1.38.1
+
+    mkdir build
+    cd build
+    export GRPC_INSTALL_DIR=/usr1/grpc-debug
+    cmake -D CMAKE_PREFIX_PATH=$GRPC_INSTALL_DIR \
+        -DCMAKE_BUILD_TYPE=Debug \
+        ..
+
+    export http_proxy="socks5://127.0.0.1:60001"
+    export https_proxy="socks5://127.0.0.1:60001"
+
+    make install
+
+    # grpc 1.38.1 need install abseil-cpp
+    cd ../../third_party/abseil-cpp/
+    mkdir -p cmake/build
+    cd cmake/build
+    cmake ../..
+    make install
+
 ### Win32
 
 Grpc Version: 1.38.1
