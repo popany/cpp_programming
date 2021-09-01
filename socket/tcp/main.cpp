@@ -1,4 +1,3 @@
-#include <signal.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <error.h>
@@ -527,7 +526,7 @@ int main(int argc, const char* argv[])
         Config config;
         config.set(argc, argv);
 
-        Signal(SIGPIPE, SIG_IGN);
+        Signal(SIGPIPE, SIG_IGN);  // man 2 write
         Run(config);
     } catch (const std::exception& ex) {
         std::cout << ex.what() << std::endl;
