@@ -7,6 +7,7 @@
 #define ERROR_MESSAGE(code) (std::string(__FUNCTION__) + ", " + strerror(code))
 #define	SA	struct sockaddr
 const size_t MAXLINE = 0xffff - 8; 
+#define CONNECT
 
 int Socket(int domain, int type, int protocol)
 {
@@ -16,24 +17,6 @@ int Socket(int domain, int type, int protocol)
         throw std::runtime_error(ERROR_MESSAGE(errorCode));
     }
     return fd;
-}
-
-void Bind(int fd, const std::string& addr, int port)
-{
-    sockaddr_in servaddr;
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-
-    if (inet_aton(addr.c_str(), &(servaddr.sin_addr)) == 0) {
-        int errorCode = errno;
-        throw std::runtime_error(ERROR_MESSAGE(errorCode));
-    }
-    servaddr.sin_port = htons(port);
-
-    if (bind(fd, (sockaddr *) &servaddr, sizeof(servaddr)) == -1) {
-        int errorCode = errno;
-        throw std::runtime_error(ERROR_MESSAGE(errorCode));
-    }
 }
 
 ssize_t RecvFrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
@@ -56,37 +39,52 @@ ssize_t SendTo(int sockfd, const void *buf, size_t len, int flags, const struct 
     return n;
 }
 
-void DgEcho(int sockfd, SA *pcliaddr, socklen_t clilen)
+void DgCli(FILE *fp, int sockfd, const SA *pservaddr, socklen_t servlen)
 {
-    char mesg[MAXLINE];
+    char sendline[MAXLINE];
+    char recvline[MAXLINE + 1];
 
-    for ( ; ; ) {
-        socklen_t len = clilen;
-        int n = RecvFrom(sockfd, mesg, MAXLINE, 0, pcliaddr, &len);
+    while (fgets(sendline, MAXLINE, fp) != nullptr) {
 
-        SendTo(sockfd, mesg, n, 0, pcliaddr, len);
+        SendTo(sockfd, sendline, strlen(sendline), 0, pservaddr, servlen);
+
+        ssize_t n = RecvFrom(sockfd, recvline, MAXLINE, 0, NULL, NULL);
+
+        recvline[n] = 0;
+        fputs(recvline, stdout);
     }
+}
+
+void SetServAddr(const std::string servIp, const int servPort, sockaddr_in& servaddr)
+{
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+
+    if (inet_aton(servIp.c_str(), &(servaddr.sin_addr)) == 0) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+    servaddr.sin_port = htons(servPort);
 }
 
 int main(int argc, char **argv)
 {
     try {
-        if (argc != 2) {
+        if(argc != 3) {
             throw std::runtime_error("wrong argc");
         }
 
-        int serverPort = std::stoi(argv[1]);
+        std::string servIp{ argv[1] };
+        int servPort = std::stoi(argv[2]);
+        struct sockaddr_in servaddr;
+        SetServAddr(servIp, servPort, servaddr);
 
         int sockfd = Socket(AF_INET, SOCK_DGRAM, 0);
 
-        Bind(sockfd, "0.0.0.0", serverPort);
-
-        struct sockaddr_in cliaddr;
-        DgEcho(sockfd, (SA *) &cliaddr, sizeof(cliaddr));
+        DgCli(stdin, sockfd, (SA*)&servaddr, sizeof(servaddr));
 
     } catch (const std::exception& ex) {
         std::cout << ex.what() << std::endl;
     }
-
     return 0;
 }
