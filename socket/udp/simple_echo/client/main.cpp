@@ -19,6 +19,57 @@ int Socket(int domain, int type, int protocol)
     return fd;
 }
 
+#ifdef CONNECT
+#include <unistd.h>
+
+void Connect(int sockfd, const SA *pservaddr, socklen_t servlen)
+{
+    if (connect(sockfd, (sockaddr *) pservaddr, servlen) == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+}
+
+ssize_t Write(int fd, const void *buf, size_t count)
+{
+    ssize_t n = write(fd, buf, count);
+    if (n == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+    return n;
+}
+
+ssize_t Read(int fd, void *buf, size_t count)
+{
+    ssize_t n = read(fd, buf, count);
+    if (n == -1) {
+        int errorCode = errno;
+        throw std::runtime_error(ERROR_MESSAGE(errorCode));
+    }
+    return n;
+}
+
+void DgCli(FILE *fp, int sockfd, const SA *pservaddr, socklen_t servlen)
+{
+    char sendline[MAXLINE];
+    char recvline[MAXLINE + 1];
+
+    Connect(sockfd, pservaddr, servlen);
+
+    while (fgets(sendline, MAXLINE, fp) != nullptr) {
+
+        Write(sockfd, sendline, strlen(sendline));
+
+        ssize_t n = Read(sockfd, recvline, MAXLINE);
+
+        recvline[n] = 0;
+        fputs(recvline, stdout);
+    }
+}
+
+#else
+
 ssize_t RecvFrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
 {
     ssize_t n = recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
@@ -54,6 +105,7 @@ void DgCli(FILE *fp, int sockfd, const SA *pservaddr, socklen_t servlen)
         fputs(recvline, stdout);
     }
 }
+#endif
 
 void SetServAddr(const std::string servIp, const int servPort, sockaddr_in& servaddr)
 {
