@@ -123,7 +123,7 @@ int main(int argc, char **argv)
 {
     try {
         if(argc != 3) {
-            throw std::runtime_error("wrong argc");
+            throw std::runtime_error("try client ip port");
         }
 
         std::string servIp{ argv[1] };
