@@ -40,6 +40,9 @@ int main()
     (p->*fb.f)();  // B::func()
     (p->*fd.f)();  // D::func()
 
+    std::cout << "vtalbe address of B: " << (size_t*)*(size_t*)&b << std::endl;  // vtable is in the .rodata segment
+    std::cout << "vtalbe address of D: " << (size_t*)*(size_t*)&d << std::endl;
+
     return 0;
 }
 
