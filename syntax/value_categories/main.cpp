@@ -19,7 +19,7 @@ int& foo()
 int&& bar()
 {
     static int a;
-    return static_cast<int&&>(a);  // turn a from lvalue to xvalue
+    return static_cast<int&&>(a);  // turn a from lvalue to xvalue, by casting it to an unnamed rvalue reference
 }
 
 int main()
