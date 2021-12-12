@@ -2,24 +2,23 @@
 #include <functional>
 #include <memory>
 
-void call(const std::function<void()>& f)
+struct S
 {
-    f();
-}
+    int a[100];
+};
 
 void func()
 {
-    int a = 0;
-    auto f = [=] {
-        std::cout << &a << std::endl;
+    S s;
+    auto f_lambda = [=] {
+        std::cout << &s << std::endl;
     };
-    auto f2 = std::make_shared<std::function<void()>>(f);
+    auto f_bind = std::bind(f_lambda);
+    auto f_function = std::function<void()>(f_lambda);
 
-    std::cout << &a << std::endl;  // print address on stack
-    f();  // print address on stack
-    call(f);  // print address on stack
-    call(std::bind(f));  // print address on heap
-    call(*f2);  // print address on heap
+    f_lambda();  // print address on stack
+    f_bind();  // print address on stack
+    f_function();  // print address on heap
 }
 
 int main()
@@ -28,4 +27,3 @@ int main()
 
     return 0;
 }
-
