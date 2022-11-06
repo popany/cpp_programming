@@ -26,7 +26,7 @@ ExternalProject_Add(
 )
 
 EXternalProject_Get_Property(protobuf_external install_dir)
-add_library(protobuf IMPORTED STATIC GLOBAL)
+add_library(protobuf IMPORTED SHARED GLOBAL)
 add_dependencies(protobuf protobuf_external)
 
 set(PROTOBUF_INCLUDE_DIRECTORY "${install_dir}/include")
