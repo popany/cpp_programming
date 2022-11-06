@@ -1,0 +1,14 @@
+syntax = "proto3";
+package demo;
+
+message Movie {
+   string title = 1;	
+   int32 year = 6;
+   string director = 3;
+   repeated string writers = 4;
+   repeated string top_cast = 5;
+}
+
+message Movies {
+   repeated Movie movie = 1;
+}

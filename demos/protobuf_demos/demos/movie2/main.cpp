@@ -10,7 +10,7 @@ demo::Movies gen_movies_msg() {
     {
         auto* new_movie = movies.add_movie();
         new_movie->set_title("The Shawshank Redemption");
-        new_movie->set_rank(1);
+        new_movie->set_year(1994);
         new_movie->set_director("Frank Darabont");
         *(new_movie->add_writers()) = "Stephen King";
         *(new_movie->add_top_cast()) = "Tim Robbins";
@@ -20,7 +20,7 @@ demo::Movies gen_movies_msg() {
     {
         auto* new_movie = movies.add_movie();
         new_movie->set_title("The Godfather");
-        new_movie->set_rank(2);
+        new_movie->set_year(1972);
         new_movie->set_director("Francis Ford Coppola");
         *(new_movie->add_writers()) = "Mario Puzo";
         *(new_movie->add_writers()) = "Francis Ford Coppola";
@@ -31,7 +31,7 @@ demo::Movies gen_movies_msg() {
     {
         auto* new_movie = movies.add_movie();
         new_movie->set_title("The Dark Knight");
-        new_movie->set_rank(3);
+        new_movie->set_year(2008);
         new_movie->set_director("Christopher Nolan");
         *(new_movie->add_writers()) = "Jonathan Nolan";
         *(new_movie->add_writers()) = "Christopher Nolan";
