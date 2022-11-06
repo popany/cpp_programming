@@ -1,11 +1,12 @@
-include(ExternalProject)
 set(PROTOBUF_TAR_GZ https://github.com/protocolbuffers/protobuf/archive/refs/tags/v21.9.tar.gz)
 
+include(ExternalProject)
 ExternalProject_Add(
   protobuf_external
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/protobuf
   URL ${PROTOBUF_TAR_GZ}
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/protobuf
+  INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/install
   CMAKE_CACHE_ARGS
     "-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}"
     "-Dprotobuf_BUILD_TESTS:BOOL=OFF"
@@ -13,7 +14,7 @@ ExternalProject_Add(
     "-Dprotobuf_WITH_ZLIB:BOOL=ON"
     "-DCMAKE_CXX_COMPILER:STRING=${CMAKE_CXX_COMPILER}"
     "-DBUILD_SHARED_LIBS:BOOL=ON"
-    "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/protobuf"
+    "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/install"
 
   SOURCE_SUBDIR cmake
   LOG_DOWNLOAD ON
@@ -36,4 +37,3 @@ set(PROTOBUF_LIB_FILE_NAME "${CMAKE_SHARED_LIBRARY_PREFIX}protobuf${CMAKE_SHARED
 set_target_properties(protobuf PROPERTIES
   "IMPORTED_LOCATION" "${install_dir}/lib/${PROTOBUF_LIB_FILE_NAME}"
   "INSTALL_DIR" "${install_dir}")
-
