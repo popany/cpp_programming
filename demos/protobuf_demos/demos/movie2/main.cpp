@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <fcntl.h>
 #include <unistd.h>
 #include "google/protobuf/io/zero_copy_stream_impl.h"
@@ -44,7 +45,6 @@ demo::Movies gen_movies_msg() {
 }
 
 bool write_to_text_file(const std::string& file_path, const google::protobuf::Message& msg) {
-    demo::Movies movies;
     int fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
     if (fd < 0) {
         std::cout << "unable to open file " << file_path << " to write";
@@ -67,18 +67,36 @@ bool read_from_text_file(const std::string& file_path, google::protobuf::Message
     using google::protobuf::io::ZeroCopyInputStream;
     int fd = open(file_path.c_str(), O_RDONLY);
     if (fd < 0) {
-        std::cout << "Failed to open file " << file_path;
+        std::cout << "failed to open file " << file_path;
         return false;
     }
 
     ZeroCopyInputStream *input = new FileInputStream(fd);
     bool success = TextFormat::Parse(input, msg);
     if (!success) {
-        std::cout << "Failed to parse file " << file_path << " as text proto";
+        std::cout << "failed to parse file " << file_path << " as text proto";
     }
     delete input;
     close(fd);
     return success;
+}
+
+bool write_to_bin_file(const std::string& file_path, const google::protobuf::Message& msg) {
+    std::fstream output(file_path, std::ios::out | std::ios::trunc | std::ios::binary);
+    return msg.SerializeToOstream(&output);
+}
+
+bool read_from_bin_file(const std::string& file_path, google::protobuf::Message* msg) {
+    std::fstream input(file_path, std::ios::in | std::ios::binary);
+    if (!input.good()) {
+        std::cout << "failed to open file " << file_path;
+        return false;
+    }
+    if (!msg->ParseFromIstream(&input)) {
+        std::cout << "failed to parse file " << file_path;
+        return false;
+    }
+    return true;
 }
 
 int main(int argc, char* argv[]) {
@@ -88,6 +106,8 @@ int main(int argc, char* argv[]) {
     }
     const std::string command_write_text = "write_text";
     const std::string command_read_text = "read_text";
+    const std::string command_write_bin = "write_bin";
+    const std::string command_read_bin = "read_bin";
     if (argc < 3) {
         std::cout << "no file" << std::endl;
         return 1;
@@ -104,6 +124,23 @@ int main(int argc, char* argv[]) {
         const std::string file_path = argv[2];
         demo::Movies msg{};
         if (read_from_text_file(file_path, &msg)) {
+            msg.PrintDebugString();
+            return 0;
+        } else {
+            return 1;
+        }
+    } else if (std::string(argv[1]) == command_write_bin) {
+        auto msg = gen_movies_msg();
+        const std::string file_path = argv[2];
+        if (write_to_bin_file(file_path, msg)) {
+            return 0;
+        } else {
+            return 1;
+        }
+    } else if (std::string(argv[1]) == command_read_bin) {
+        const std::string file_path = argv[2];
+        demo::Movies msg{};
+        if (read_from_bin_file(file_path, &msg)) {
             msg.PrintDebugString();
             return 0;
         } else {
