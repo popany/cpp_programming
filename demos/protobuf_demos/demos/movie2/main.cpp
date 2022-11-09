@@ -99,6 +99,20 @@ bool read_from_bin_file(const std::string& file_path, google::protobuf::Message*
     return true;
 }
 
+void print(const demo::Movies& msg) {
+    for (const auto& m : msg.movie()) {
+        std::cout << "title: " << m.title() << std::endl;
+        std::cout << "year: " << m.year() << std::endl;
+        std::cout << "director: " << m.director() << std::endl;
+        for (const auto& writer : m.writers()) {
+            std::cout << "writer: " << writer << std::endl;
+        }
+        for (const auto& top_cast: m.top_cast()) {
+            std::cout << "top_cast: " << top_cast << std::endl;
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cout << "no command" << std::endl;
@@ -142,6 +156,7 @@ int main(int argc, char* argv[]) {
         demo::Movies msg{};
         if (read_from_bin_file(file_path, &msg)) {
             msg.PrintDebugString();
+            print(msg);
             return 0;
         } else {
             return 1;
