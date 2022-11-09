@@ -1,11 +1,13 @@
 #include <iostream>
 #include "../common.h"
 
+void add_new(B* p);
+
 class D1 : public B {
 public:
     D1() {
         std::cout << "construct: " << name() << std::endl;
-        Register::add(this);
+        add_new(this);
     }
     ~D1() {
         std::cout << "deconstruct: " << name() << std::endl;
