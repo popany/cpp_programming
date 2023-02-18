@@ -7,5 +7,6 @@ target_link_libraries(demo
   PRIVATE
   benchmark
   benchmark_main
+  spline
   Threads::Threads
 )

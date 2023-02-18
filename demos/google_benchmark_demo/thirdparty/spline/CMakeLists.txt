@@ -16,3 +16,12 @@ ExternalProject_Add(tk-spline
   INSTALL_COMMAND   ""
   TEST_COMMAND      ""
 )
+
+add_library(spline INTERFACE)
+add_dependencies(spline tk-spline)
+
+ExternalProject_Get_Property(tk-spline SOURCE_DIR)
+set(INCLUDE_DIRECTORY "${SOURCE_DIR}/src")
+file(MAKE_DIRECTORY ${INCLUDE_DIRECTORY})
+
+target_include_directories(spline INTERFACE ${INCLUDE_DIRECTORY})

@@ -1,18 +1,18 @@
-#include <string>
 #include <benchmark/benchmark.h>
+#include <spline.h>
+#include <vector>
 
-static void BM_StringCreation(benchmark::State& state) {
-  for (auto _ : state)
-    std::string empty_string;
+const std::vector<double> X = {0.1, 0.4, 1.2, 1.8, 2.0};  // must be increasing
+const std::vector<double> Y = {0.1, 0.7, 0.6, 1.1, 0.9};
+
+static void BM_C2SplineCreation(benchmark::State& state) {
+  tk::spline s(X, Y ,tk::spline::cspline);
 }
 // Register the function as a benchmark
-BENCHMARK(BM_StringCreation);
+BENCHMARK(BM_C2SplineCreation);
 
-// Define another benchmark
-static void BM_StringCopy(benchmark::State& state) {
-  std::string x = "hello";
-  for (auto _ : state)
-    std::string copy(x);
+static void BM_C1SplineCreation(benchmark::State& state) {
+  tk::spline s(X, Y ,tk::spline::cspline_hermite);
 }
-BENCHMARK(BM_StringCopy);
-
+// Register the function as a benchmark
+BENCHMARK(BM_C1SplineCreation);
