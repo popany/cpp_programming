@@ -22,3 +22,24 @@ ExternalProject_Add(google-benchmark
   LOG_BUILD         ON
   LOG_INSTALL       ON
 )
+
+add_library(benchmark IMPORTED STATIC GLOBAL)
+add_dependencies(benchmark google-benchmark)
+
+add_library(benchmark_main IMPORTED STATIC GLOBAL)
+add_dependencies(benchmark_main google-benchmark)
+
+ExternalProject_Get_Property(google-benchmark INSTALL_DIR)
+set(INCLUDE_DIRECTORY "${INSTALL_DIR}/include")
+file(MAKE_DIRECTORY ${INCLUDE_DIRECTORY})
+
+target_include_directories(benchmark INTERFACE ${INCLUDE_DIRECTORY})
+target_include_directories(benchmark_main INTERFACE ${INCLUDE_DIRECTORY})
+
+set_target_properties(benchmark PROPERTIES
+  "IMPORTED_LOCATION" "${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}benchmark${CMAKE_STATIC_LIBRARY_SUFFIX}"
+  "INSTALL_DIR" "${INSTALL_DIR}")
+
+set_target_properties(benchmark_main PROPERTIES
+  "IMPORTED_LOCATION" "${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}benchmark_main${CMAKE_STATIC_LIBRARY_SUFFIX}"
+  "INSTALL_DIR" "${INSTALL_DIR}")
