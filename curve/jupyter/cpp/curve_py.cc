@@ -20,7 +20,6 @@ public:
   case order:                                                                  \
     curve_ = std::make_unique<BezierCurveRecursiveDefine<order>>(              \
         &control_points[0]);                                                   \
-    LOG(INFO) << "BezierCurve order: " << order;                               \
     break;
 
       BEZIER_CURVE_ORDER_CASE(0)
