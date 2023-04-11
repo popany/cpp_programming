@@ -28,4 +28,4 @@ check_pip_install jupyter-server-proxy
 # https://stackoverflow.com/a/72747002
 # May need to Downgrade markupsafe to 2.0.1
 # pip install markupsafe==2.0.1
-jupyter notebook .
+jupyter notebook --port 52001 .
