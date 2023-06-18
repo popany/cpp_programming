@@ -1,3 +1,8 @@
+// reference:
+// https://en.wikipedia.org/wiki/Geographic_coordinate_conversion
+// https://gist.github.com/govert/1b373696c9a27ff4c72a
+
+
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -94,6 +99,22 @@ void geodetic_to_enu(const GeoditicCoord& geo0, const GeoditicCoord& geo, EnuCoo
     ecef_to_enu(sin_phi0, cos_phi0, sin_lambda0, cos_lambda0, ecef0, ecef, enu);
 }
 
+void enu_to_ecef(const double sin_phi0, const double cos_phi0,
+                 const double sin_lambda0, const double cos_lambda0,
+                 const EcefCoord& ecef0, const EnuCoord& enu,
+                 EcefCoord* ecef) {
+    ecef->x = -sin_lambda0 * enu.e +
+              -sin_phi0 * cos_lambda0 * enu.n +
+              cos_phi0 * cos_lambda0 * enu.u +
+              ecef0.x;
+    ecef->y = cos_lambda0 * enu.e +
+              -sin_phi0 * sin_lambda0 * enu.n +
+              cos_phi0 * sin_lambda0 * enu.u +
+              ecef0.y;
+    ecef->z = cos_phi0 * enu.n +
+              sin_phi0 * enu.u + ecef0.z;
+}
+
 void test_assert(const bool val, const std::string& error_msg) {
     if (!val) {
         std::cerr << "Assert failed: " << error_msg << std::endl;
@@ -102,7 +123,12 @@ void test_assert(const bool val, const std::string& error_msg) {
 }
 
 bool almost_equal(const double a, const double b, const double epsilon) {
-    return std::abs(a - b) < epsilon;
+    const bool al_eq = std::abs(a - b) < epsilon;
+    if (!al_eq) {
+        std::cerr << std::fixed << std::setprecision(7); 
+        std::cerr << a << " != " << b << std::endl;
+    }
+    return al_eq;
 }
 
 void test_geodetic_to_ecef() {  // https://www.convertecef.com
@@ -167,10 +193,33 @@ void test_geodetic_to_enu() {
     test_assert(almost_equal(enu.u, 2852.39, centimeter), "enu.u wrong");
 }
 
+void test_enu_to_ecef() {
+    std::cout << "> test_ecef_to_enu" << std::endl; 
+
+    GeoditicCoord geo0{34.0000005, -117.3335693, 251.72};
+    EcefCoord ecef0{};
+    geodetic_to_ecef(geo0, &ecef0);
+
+    const double sin_phi0 = std::sin(degree_to_radian(geo0.latitude));
+    const double cos_phi0 = std::cos(degree_to_radian(geo0.latitude));
+    const double sin_lambda0 = std::sin(degree_to_radian(geo0.longitude));
+    const double cos_lambda0 = std::cos(degree_to_radian(geo0.longitude));
+
+    EnuCoord enu{};
+    ecef_to_enu(sin_phi0, cos_phi0, sin_lambda0, cos_lambda0, ecef0, {ecef0.x + 1, ecef0.y + 1, ecef0.z + 1}, &enu);
+
+    EcefCoord ecef{};
+    enu_to_ecef(sin_phi0, cos_phi0, sin_lambda0, cos_lambda0, ecef0, enu, &ecef);
+    test_assert(almost_equal(ecef.x, ecef0.x + 1, EPSILON), "ecef.x wrong");
+    test_assert(almost_equal(ecef.y, ecef0.y + 1, EPSILON), "ecef.y wrong");
+    test_assert(almost_equal(ecef.z, ecef0.z + 1, EPSILON), "ecef.z wrong");
+}
+
 int main(int argc, char* argv[]) {
     test_geodetic_to_ecef();
     test_ecef_to_enu();
     test_geodetic_to_enu();
+    test_enu_to_ecef();
 
     return 0;
 }
